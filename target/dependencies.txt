@@ -1,0 +1,23 @@
+digraph "org.school_of_information_and_physical_sciences:plagurism_graph_comparison:jar:0.1.0" { 
+	"org.school_of_information_and_physical_sciences:plagurism_graph_comparison:jar:0.1.0" -> "com.github.javaparser:javaparser-symbol-solver-core:jar:3.23.1:compile" ; 
+	"com.github.javaparser:javaparser-symbol-solver-core:jar:3.23.1:compile" -> "com.github.javaparser:javaparser-core:jar:3.23.1:compile" ; 
+	"com.github.javaparser:javaparser-symbol-solver-core:jar:3.23.1:compile" -> "org.javassist:javassist:jar:3.28.0-GA:compile" ; 
+	"com.github.javaparser:javaparser-symbol-solver-core:jar:3.23.1:compile" -> "com.google.guava:guava:jar:31.0.1-jre:compile" ; 
+	"com.google.guava:guava:jar:31.0.1-jre:compile" -> "com.google.guava:failureaccess:jar:1.0.1:compile" ; 
+	"com.google.guava:guava:jar:31.0.1-jre:compile" -> "com.google.guava:listenablefuture:jar:9999.0-empty-to-avoid-conflict-with-guava:compile" ; 
+	"com.google.guava:guava:jar:31.0.1-jre:compile" -> "com.google.code.findbugs:jsr305:jar:3.0.2:compile" ; 
+	"com.google.guava:guava:jar:31.0.1-jre:compile" -> "org.checkerframework:checker-qual:jar:3.12.0:compile" ; 
+	"com.google.guava:guava:jar:31.0.1-jre:compile" -> "com.google.errorprone:error_prone_annotations:jar:2.7.1:compile" ; 
+	"com.google.guava:guava:jar:31.0.1-jre:compile" -> "com.google.j2objc:j2objc-annotations:jar:1.3:compile" ; 
+ } digraph "org.school_of_information_and_physical_sciences:plagurism_graph_comparison:jar:0.1.0" { 
+	"org.school_of_information_and_physical_sciences:plagurism_graph_comparison:jar:0.1.0" -> "com.github.javaparser:javaparser-symbol-solver-core:jar:3.23.1:compile" ; 
+	"com.github.javaparser:javaparser-symbol-solver-core:jar:3.23.1:compile" -> "com.github.javaparser:javaparser-core:jar:3.23.1:compile" ; 
+	"com.github.javaparser:javaparser-symbol-solver-core:jar:3.23.1:compile" -> "org.javassist:javassist:jar:3.28.0-GA:compile" ; 
+	"com.github.javaparser:javaparser-symbol-solver-core:jar:3.23.1:compile" -> "com.google.guava:guava:jar:31.0.1-jre:compile" ; 
+	"com.google.guava:guava:jar:31.0.1-jre:compile" -> "com.google.guava:failureaccess:jar:1.0.1:compile" ; 
+	"com.google.guava:guava:jar:31.0.1-jre:compile" -> "com.google.guava:listenablefuture:jar:9999.0-empty-to-avoid-conflict-with-guava:compile" ; 
+	"com.google.guava:guava:jar:31.0.1-jre:compile" -> "com.google.code.findbugs:jsr305:jar:3.0.2:compile" ; 
+	"com.google.guava:guava:jar:31.0.1-jre:compile" -> "org.checkerframework:checker-qual:jar:3.12.0:compile" ; 
+	"com.google.guava:guava:jar:31.0.1-jre:compile" -> "com.google.errorprone:error_prone_annotations:jar:2.7.1:compile" ; 
+	"com.google.guava:guava:jar:31.0.1-jre:compile" -> "com.google.j2objc:j2objc-annotations:jar:1.3:compile" ; 
+ } 
