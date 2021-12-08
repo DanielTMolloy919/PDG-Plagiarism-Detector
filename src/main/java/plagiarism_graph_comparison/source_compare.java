@@ -14,7 +14,7 @@ import com.github.javaparser.ast.CompilationUnit;
 
 public class source_compare {
 
-    private static final String parent_folder = "test_files\\source_files";
+    private static final String parent_folder = "test_files\\Base Programs";
     public static void main(String[] args) throws Exception {
 
         // String parent_folder = args[0]; // collect parent folder location from user
@@ -33,23 +33,9 @@ public class source_compare {
     //     return placeholder;
     // }
 
-    public static void test(String path) throws FileNotFoundException  {
+    public static void test(String path) throws Exception  {
         File[] subdirectories = new File(path).listFiles(File::isDirectory); // get all the subdirectories of the root folder
 
-        ArrayList<Submission> submission_set = new ArrayList<Submission>(); 
-
-        for (int i = 0; i < subdirectories.length; i++) { // create a submission object for each subdirectory
-            submission_set.add(new Submission(subdirectories[i]));
-            System.out.println("yay");
-        }
+        ArrayList<Submission> submission_set = new ArrayList<Submission>();
     }
-
-    // public static boolean is_valid_path(String path) {
-    //     try {
-    //         Paths.get(path);
-    //     } catch (InvalidPathException | NullPointerException ex) {
-    //         return false;
-    //     }
-    //     return true;
-    // }
 }
