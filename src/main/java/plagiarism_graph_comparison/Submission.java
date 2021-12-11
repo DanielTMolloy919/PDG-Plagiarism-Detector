@@ -12,28 +12,36 @@ import com.github.javaparser.ParseResult;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.utils.SourceRoot;
+
+import org.jgrapht.Graph;
+import org.jgrapht.graph.DefaultDirectedGraph;
+import org.jgrapht.graph.DefaultEdge;
 
 
 public class Submission {
 
-    private static final String root_folder_location = "test_files\\Base Programs\\1\\producer";
+    ArrayList<MethodDeclaration> method_nodes;
+    ArrayList<Method> method_objects;
+    int counter;
 
-    // public Submission(File subfolder) throws IOException {
-    public static void main(String[] args) throws IOException {        
-        Path root_folder = Paths.get(root_folder_location);
+    public Submission(SourceRoot root_dir) throws IOException {
 
-        SourceRoot source_root = new SourceRoot(root_folder);
-        source_root.tryToParse();
-
-        List<CompilationUnit> compilations = source_root.getCompilationUnits(); // get all the compilation units from the SourceRoot
-
-        ArrayList<MethodDeclaration> method_nodes = new ArrayList<MethodDeclaration>(); // empty list of method nodes
+        SourceRoot source = root_dir;
         
-        compilations.stream().forEach(cp -> method_nodes.addAll(cp.findAll(MethodDeclaration.class))); // loop through each compilation unit, find all the method nodes and add them to the list
+        source.tryToParse();
 
-        method_nodes.stream();
+        method_nodes = new ArrayList<MethodDeclaration>(); // empty list of method nodes
 
-        method_nodes.forEach(node -> System.out.println("* " + node));
+        List<CompilationUnit> compilations = source.getCompilationUnits(); // get all the compilation units from the SourceRoot
+        
+        compilations.stream().forEach(cp -> this.method_nodes.addAll(cp.findAll(MethodDeclaration.class))); // loop through each compilation unit, find all the method nodes and add them to the list
+
+        method_nodes.stream().forEach(method_node -> method_objects.add(new Method(method_node))); // create a method object for each node, which will build a pdg for each
     }
+
+    
+
+    
 }

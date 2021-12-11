@@ -2,7 +2,9 @@ package plagiarism_graph_comparison;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.InvalidPathException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,32 +12,19 @@ import java.util.List;
 
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.utils.SourceRoot;
 
 
 public class source_compare {
 
-    private static final String parent_folder = "test_files\\Base Programs";
-    public static void main(String[] args) throws Exception {
+    private static final String root_folder_location = "test_files\\Base Programs\\1\\producer";
+    
+    public static void main(String[] args) throws IOException {
+        
+        Path root_folder = Paths.get(root_folder_location);
 
-        // String parent_folder = args[0]; // collect parent folder location from user
+        SourceRoot source_root = new SourceRoot(root_folder);
 
-        test(parent_folder);
-
-    }
-
-    // private static List<Submission> submission_generator(String path) {
-
-    //     File[] directories = new File(path).listFiles(File::isDirectory);
-
-    //     System.out.println(Arrays.toString(directories))
-
-    //     List<Submission> placeholder;
-    //     return placeholder;
-    // }
-
-    public static void test(String path) throws Exception  {
-        File[] subdirectories = new File(path).listFiles(File::isDirectory); // get all the subdirectories of the root folder
-
-        ArrayList<Submission> submission_set = new ArrayList<Submission>();
+        Submission test_submission = new Submission(source_root);
     }
 }
