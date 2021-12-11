@@ -1,53 +1,55 @@
 package plagiarism_graph_comparison;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.List;
 
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.stmt.Statement;
 
 import org.jgrapht.Graph;
+import org.jgrapht.ext.DOTExporter;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 
 public class Method {
 
-    Graph<statement_vertex, DefaultEdge> cfg;
+    Graph<Integer, DefaultEdge> cfg;
     static int counter;
 
-    public Method(MethodDeclaration method_node) {
-        counter = 0;
+    public Method(MethodDeclaration method_node) throws IOException {
 
         cfg = new DefaultDirectedGraph<>(DefaultEdge.class); // initialize the jgrapht graph
 
-        List<Statement> found_statements = method_node.findAll(Statement.class);
-        
-        found_statements.forEach(node -> node_constructor(node)); // create all the jgrapht nodes
+        List<Statement> statements = method_node.findAll(Statement.class);
 
-        found_statements.forEach(statement -> { // add all the edges
-            if (statement.isIfStmt()) {
-                System.out.println("pogg");
-            } 
-            
-            else {
-                cfg.addEdge(arg0, arg1)
-            }
-        });
-    }
-
-    private void node_constructor(Statement statement) {
-        cfg.addVertex(new statement_vertex(counter, statement));
-
-        counter++;
-    }
-    
-    // a simple class to group the statement node and a unique identifying number
-    class statement_vertex {
-        int key; // this is the unique block number
-        Statement statement; // this is the actual statement node
-
-        statement_vertex (int key, Statement statement) {
-            this.key = key;
-            this.statement = statement;
+        for (int i = 0; i < statements.size(); i++) {
+            cfg.addVertex(i);
         }
+
+        for (int i = 1; i < statements.size(); i++) {
+            // if (statements.get(i).isIfStmt() ) {
+                
+            // }
+
+            cfg.addEdge(i-1, i);
+        }
+
+        export_graph();        
+    }
+
+    private void id_to_statement() {
+
+    }
+
+    private void statement_to_id() {
+
+    }
+
+    private void export_graph() throws IOException {
+
+        DOTExporter<Integer, DefaultEdge> export = new DOTExporter<>();
+
+        export.export(new FileWriter("output.dot"), cfg);
     }
 }

@@ -34,11 +34,20 @@ public class Submission {
 
         method_nodes = new ArrayList<MethodDeclaration>(); // empty list of method nodes
 
+        method_objects = new ArrayList<Method>();
+
         List<CompilationUnit> compilations = source.getCompilationUnits(); // get all the compilation units from the SourceRoot
         
         compilations.stream().forEach(cp -> this.method_nodes.addAll(cp.findAll(MethodDeclaration.class))); // loop through each compilation unit, find all the method nodes and add them to the list
 
-        method_nodes.stream().forEach(method_node -> method_objects.add(new Method(method_node))); // create a method object for each node, which will build a pdg for each
+        method_nodes.stream().forEach(method_node -> {
+            try {
+                method_objects.add(new Method(method_node));
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }); // create a method object for each node, which will build a pdg for each
     }
 
     
