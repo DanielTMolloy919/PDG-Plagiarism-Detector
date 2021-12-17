@@ -29,7 +29,7 @@ public class Method {
     private Statement original_statement;
     private int test_index;
 
-    public Method(MethodDeclaration method_node) throws IOException {
+    public Method(MethodDeclaration method_node) throws IOException, StatementNotFoundException {
 
         this.method_node = method_node;
 
@@ -43,12 +43,12 @@ public class Method {
 
         statement_blacklist = new ArrayList<Integer>();
 
-        for (int i = 0; i < statements.size(); i++) {
+        for (int i = 1; i < statements.size() + 1; i++) {
             cfg.addVertex(i); // load all the statement nodes
             // statement_ids.add(i); // load all the statement ids into the list
         }        
 
-        for (int i = 0; i < statements.size() - 1; i++) { // loop through each statement
+        for (int i = 1; i < statements.size(); i++) { // loop through each statement
             
             if (statement_blacklist.contains(i)) { // if the statement is on the blacklist, don't go any further
                 continue;
@@ -118,15 +118,15 @@ public class Method {
                 }
             }
             
-            // if its a `break` statement
-            else if(statement.isBreakStmt()) {
+            // if its a `return` statement
+            else if(statement.isReturnStmt()) {
                 Statement parent = statement.findAncestor(Statement.class).get();
 
                 cfg.addEdge(current_index, get_last_child(parent));
             }
 
-            // if its a `return` statement
-            else if(statement.isReturnStmt()) {
+            // if its a `break` statement
+            else if(statement.isBreakStmt()) {
                 cfg.addEdge(current_index, statements.size());
             }
 
@@ -144,12 +144,18 @@ public class Method {
         }      
     }
 
-    private int statement_to_id(Statement statement) {
-
-        return IntStream.range(0, statements.size())
+    private int statement_to_id(Statement statement) throws StatementNotFoundException {
+        OptionalInt statement_id = IntStream.range(0, statements.size())
         .filter(index -> statements.get(index).equals(statement))
-        .findFirst()
-        .getAsInt();
+        .findFirst();
+
+        if (statement_id.isPresent()) {
+            return statement_id.getAsInt();
+        }
+        
+        else {
+            throw new StatementNotFoundException("Couldn't find an ID for the given statement");
+        }
     }
 
     private int get_last_child(int id) {
@@ -158,20 +164,19 @@ public class Method {
         return id + children.size() - 1;
     }
 
-    private int get_last_child(Statement parent) {
+    private int get_last_child(Statement parent) throws StatementNotFoundException {
         List<Statement> children = parent.findAll(Statement.class);
 
         return statement_to_id(parent) + children.size() - 1;
     }
 
-    private int get_subsequent_sibling(int id) {
+    private int get_subsequent_sibling(int id) throws StatementNotFoundException {
         original_statement = statements.get(id);
         List<Statement> children = statements.get(id).findAll(Statement.class);
 
-        test_index = id + 1;
-        
+        test_index = id + 1;        
 
-        while (true) {
+        while (test_index - id > 200) {
             // System.out.println(test_index);
             // for each node in the sequence after id, if it can't be found in the children list, it must be the next sibling. Therefore return it
             if (!children.stream()
@@ -184,47 +189,9 @@ public class Method {
                 test_index++;
             }
         }
+
+        throw new StatementNotFoundException("Subsequent sibling function has looped through 200 children, cannot find sibling for statement: " + "[" + id + "]" + original_statement.toString());
     }
-
-    // private void export_graph() throws IOException {
-
-    //     DOTExporter<Integer, DefaultEdge> export = new DOTExporter<>();
-
-    //     String file_path = "graphs\\CFG\\file" + counter + ".dot";
-
-    //     export.exportGraph(cfg, new FileWriter(file_path));
-    // }
-
-    // private void export_method(MethodDeclaration md) throws IOException {
-
-    //     String file_path = "graphs\\Methods\\file" + counter + ".txt";
-
-    //     FileWriter f = new FileWriter(file_path);
-
-    //     f.write(md.toString()); 
-    //     f.flush();
-    //     f.close();
-    // }
-
-    // private void export_statements(List<Statement> stmts) throws IOException {
-    //     File export_file = new File("graphs\\Statements\\file" + counter + ".txt");
-
-    //     export_file.getParentFile().mkdirs();
-    //     export_file.createNewFile();
-
-    //     FileWriter f = new FileWriter(export_file);
-
-    //     String body = new String();
-
-    //     for (int j = 0; j < stmts.size(); j++) {
-    //         String addition = "[" + j + "] " + stmts.get(j).toString();
-    //         body += addition;          
-    //     }
-
-    //     f.write(body); 
-    //     f.flush();
-    //     f.close();
-    // }
 
     private void exporter(String type) throws IOException {
 
@@ -260,6 +227,12 @@ public class Method {
             DOTExporter<Integer, DefaultEdge> export = new DOTExporter<>();
 
             export.exportGraph(cfg, f);
+        }
+    }
+
+    public class StatementNotFoundException extends Exception {
+        public StatementNotFoundException (String str) {
+            super(str);
         }
     }
 }

@@ -7,6 +7,8 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.utils.SourceRoot;
 
+import plagiarism_graph_comparison.Method.StatementNotFoundException;
+
 
 public class Submission {
 
@@ -14,7 +16,7 @@ public class Submission {
     ArrayList<Method> method_objects;
     int counter;
 
-    public Submission(SourceRoot root_dir) throws IOException {
+    public Submission(SourceRoot root_dir) throws IOException, StatementNotFoundException {
 
         SourceRoot source = root_dir;
         
