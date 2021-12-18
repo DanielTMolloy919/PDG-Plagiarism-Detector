@@ -19,15 +19,21 @@ import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.nio.dot.DOTExporter;
 
 public class Method {
+    static int counter; // How many objects this class has created - used for naming export files
 
-    Graph<Integer, DefaultEdge> cfg;
-    static int counter;
-    List<Statement> statements; // a list of all the statements in the method - this doesn't change
-    List<Integer> statement_blacklist;
-    MethodDeclaration method_node;
+    MethodDeclaration method_node; // The method node given to the constructor when a new method object is created
+
+    List<Statement> statements; // a list of all the statements found in the method
+    List<Integer> statement_blacklist; // a list of statements to skip iteration - they have already been taken into account
+
+    Graph<Integer, DefaultEdge> cfg; // The method's control flow diagram
+
+    int end_id; // This is the ID of the last statement in the method
+
+    int current_id; // When looping through each statement, this is the ID of the current statement
 
     private Statement original_statement;
-    private int test_index;
+    private int test_id;
 
     public Method(MethodDeclaration method_node) throws IOException, StatementNotFoundException {
 
@@ -43,59 +49,62 @@ public class Method {
 
         statement_blacklist = new ArrayList<Integer>();
 
-        for (int i = 1; i < statements.size() + 1; i++) {
+        for (int i = 0; i < statements.size(); i++) {
             cfg.addVertex(i); // load all the statement nodes
             // statement_ids.add(i); // load all the statement ids into the list
-        }        
+        }
 
-        for (int i = 1; i < statements.size(); i++) { // loop through each statement
-            
-            if (statement_blacklist.contains(i)) { // if the statement is on the blacklist, don't go any further
-                continue;
-            }
+        end_id = 999;
+        
+        cfg.addVertex(end_id); // end node
 
-            Statement statement = statements.get(i);
+        for (int i = 0; i < statements.size()-1; i++) { // loop through each statement
 
-            int current_index = i;
 
-            // System.out.println("[" + i + "] " + statement);
+            Statement statement = statements.get(current_id);
 
             // if its an 'If' statement
             if (statement.isIfStmt()) {
                 IfStmt ifstmt = statement.asIfStmt(); // get the specific if statement object
 
-                int then_index = statement_to_id(ifstmt.getThenStmt());
-                int subsequent_index = get_subsequent_sibling(current_index);
-                int last_child_index = get_last_child(then_index);
+                int then_id = statement_to_id(ifstmt.getThenStmt());
+                int subsequent_id = get_subsequent_sibling(current_id);
+                int last_child_id = get_last_child(then_id);
 
-                cfg.addEdge(current_index, then_index);
-                cfg.addEdge(last_child_index, subsequent_index); // link the end of if, to the statement after if - skipping else
-                statement_blacklist.add(last_child_index); // ensure then statement isn't double counted
+                if (!is_statement_special(last_child_id)) { // link the end of 'then' to the next node, unless the node is another branching statement
+                    cfg.addEdge(last_child_id, subsequent_id);
+                } 
+                
+                statement_blacklist.add(last_child_id); // ensure then isn't automatically linked to else
 
-                if (ifstmt.hasElseBlock()) { // if there is an else statement, do the same
-                    int else_index = statement_to_id(ifstmt.getElseStmt().get());
+                cfg.addEdge(current_id, then_id); // link if to then
 
-                    cfg.addEdge(current_index, else_index);
+                if (ifstmt.hasElseBlock()) { // if there is an else statement, link if to else
+                    int else_id = statement_to_id(ifstmt.getElseStmt().get());
+
+                    cfg.addEdge(current_id, else_id);
+                } 
+
+                else { // if there isn't and else statement and if evaluates to false, if should be linked to the subsequent node
+                    cfg.addEdge(current_id, subsequent_id);
                 }
-
-                else {
-                    cfg.addEdge(current_index, subsequent_index);
-                }               
             }
             
             // if its a 'for' or `do-while` statement
             else if(statement.isForStmt() || statement.isDoStmt() || statement.isForEachStmt()) {
-                cfg.addEdge(get_last_child(current_index), current_index);
+                cfg.addEdge(get_last_child(current_id), current_id);
             }
 
             // if its a 'while' statement
             else if(statement.isWhileStmt()) {
-                int last_child_index = get_last_child(current_index);
+                int last_child_id = get_last_child(current_id);
 
-                cfg.addEdge(get_last_child(last_child_index), current_index);
-                statement_blacklist.add(last_child_index);
+                cfg.addEdge(get_last_child(last_child_id), current_id);
+                statement_blacklist.add(last_child_id);
 
-                cfg.addEdge(current_index, get_subsequent_sibling(current_index));
+                int subsequent_id = get_subsequent_sibling(current_id);
+
+                cfg.addEdge(current_id, subsequent_id);
             }
 
             // if its a 'case-switch' statement
@@ -109,48 +118,67 @@ public class Method {
                 switch_entries.stream().forEach(entry -> entry.getStatements().addAll(entries));                
 
                 for (Statement entry : entries) {
-                    int entry_index = statement_to_id(entry);
-                    int last_child_index = get_last_child(entry_index);
+                    int entry_id = statement_to_id(entry);
+                    int last_child_id = get_last_child(entry_id);
 
-                    cfg.addEdge(current_index, entry_index);
-                    cfg.addEdge(last_child_index, get_subsequent_sibling(current_index));
-                    statement_blacklist.add(last_child_index);
+                    cfg.addEdge(current_id, entry_id);
+                    cfg.addEdge(last_child_id, get_subsequent_sibling(current_id));
+                    statement_blacklist.add(last_child_id);
                 }
+            }
+
+            // if its a 'try-catch' statement
+            else if(statement.isTryStmt()) {
+                TryStmt trystmt = statement.asTryStmt();
+
+                int last_try_id = get_last_child(trystmt.getTryBlock().getStatements().stream().findFirst().get());
+
+                int subsequent_id = get_subsequent_sibling(current_id);
+
+                cfg.addEdge(last_try_id, subsequent_id);
+                cfg.addEdge(current_id, current_id + 1);
+
+                statement_blacklist.add(subsequent_id-1);
             }
             
             // if its a `return` statement
             else if(statement.isReturnStmt()) {
-                Statement parent = statement.findAncestor(Statement.class).get();
-
-                cfg.addEdge(current_index, get_last_child(parent));
+                cfg.addEdge(current_id, end_id);
             }
 
             // if its a `break` statement
             else if(statement.isBreakStmt()) {
-                cfg.addEdge(current_index, statements.size());
+                cfg.addEdge(current_id, end_id);
             }
 
             // if its a `continue` statement
             else if(statement.isContinueStmt()) {
-                cfg.addEdge(current_index, statement_to_id(statement.findAncestor(Statement.class).get()));
+                cfg.addEdge(current_id, statement_to_id(statement.findAncestor(Statement.class).get()));
             }
 
-            else {
-                cfg.addEdge(current_index, current_index+1);
-            }
+            else if(!statement_blacklist.contains(current_id)) { // if the statement isn't on the blacklist, 
+                cfg.addEdge(current_id, current_id+1);
+            } 
 
-            
             exporter("CFGs");
-        }      
+
+            current_id++;
+        }
+
+        int last_statement_id = statements.size()-1;
+    
+        cfg.addEdge(last_statement_id, end_id);
+
+        exporter("CFGs");
     }
 
     private int statement_to_id(Statement statement) throws StatementNotFoundException {
-        OptionalInt statement_id = IntStream.range(0, statements.size())
-        .filter(index -> statements.get(index).equals(statement))
+        OptionalInt statement_position = IntStream.range(0, statements.size())
+        .filter(id -> statements.get(id).equals(statement))
         .findFirst();
 
-        if (statement_id.isPresent()) {
-            return statement_id.getAsInt();
+        if (statement_position.isPresent()) {
+            return statement_position.getAsInt(); // add 1 to convert from list position to id
         }
         
         else {
@@ -170,27 +198,39 @@ public class Method {
         return statement_to_id(parent) + children.size() - 1;
     }
 
-    private int get_subsequent_sibling(int id) throws StatementNotFoundException {
+    private int get_subsequent_sibling(int id) {
         original_statement = statements.get(id);
         List<Statement> children = statements.get(id).findAll(Statement.class);
 
-        test_index = id + 1;        
+        test_id = id;
 
-        while (test_index - id > 200) {
-            // System.out.println(test_index);
+        while (test_id < statements.size()) {
+            // System.out.println(test_id);
             // for each node in the sequence after id, if it can't be found in the children list, it must be the next sibling. Therefore return it
             if (!children.stream()
-            .filter(child -> child.equals(statements.get(test_index)))
+            .filter(child -> child.equals(statements.get(test_id)))
             .findFirst()
             .isPresent()) {
-                return test_index;
+                return test_id;
             }
             else {
-                test_index++;
+                test_id++;
             }
         }
 
-        throw new StatementNotFoundException("Subsequent sibling function has looped through 200 children, cannot find sibling for statement: " + "[" + id + "]" + original_statement.toString());
+        return end_id;
+        // throw new StatementNotFoundException("Subsequent sibling function has looped through 200 children, cannot find sibling for statement: " + "[" + id + "]" + original_statement.toString());
+    }
+
+    private boolean is_statement_special(int id) {
+        Statement statement = statements.get(id);
+
+        return statement.isBreakStmt() || statement.isContinueStmt() || statement.isDoStmt() || statement.isForEachStmt() || statement.isForStmt() || statement.isIfStmt() || statement.isReturnStmt() || statement.isSwitchStmt() || statement.isTryStmt() || statement.isWhileStmt();
+    }
+
+    private boolean is_statement_special(Statement statement) {
+
+        return statement.isBreakStmt() || statement.isContinueStmt() || statement.isDoStmt() || statement.isForEachStmt() || statement.isForStmt() || statement.isIfStmt() || statement.isReturnStmt() || statement.isSwitchStmt() || statement.isTryStmt() || statement.isWhileStmt();
     }
 
     private void exporter(String type) throws IOException {
@@ -214,7 +254,7 @@ public class Method {
             String body = new String();
 
             for (int j = 0; j < this.statements.size(); j++) {
-                String addition = "[" + j + "] " + this.statements.get(j).toString();
+                String addition = "[" + j + "] " + this.statements.get(j).toString() + "\n";
                 body += addition;          
             }
             f.write(body); 
@@ -224,7 +264,7 @@ public class Method {
         }
 
         else if(type =="CFGs") {
-            DOTExporter<Integer, DefaultEdge> export = new DOTExporter<>();
+            DOTExporter<Integer, DefaultEdge> export = new DOTExporter<>(v -> v.toString());
 
             export.exportGraph(cfg, f);
         }

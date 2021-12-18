@@ -23,7 +23,8 @@
     double p = productionMean + productionRange * (randomProducer.nextDouble() - 0.5);
     this.actualProductionTime += p;
     EventQueue.currentQueue().insertEvent(new ProducerEvent(TimeKeeper.currentTime() + p, ProducerEvent.WILL_FINISH_OBJECT, this));
-}[1] // pass to storage
+}
+[1] // pass to storage
 if (this.currentObject != null) {
     try {
         this.moveCurrentObjectToStorage();
@@ -33,7 +34,8 @@ if (this.currentObject != null) {
         this.actualBlockedTime -= TimeKeeper.currentTime();
         return;
     }
-}[2] {
+}
+[2] {
     try {
         this.moveCurrentObjectToStorage();
     } catch (StorageFullException e) {
@@ -42,22 +44,30 @@ if (this.currentObject != null) {
         this.actualBlockedTime -= TimeKeeper.currentTime();
         return;
     }
-}[3] try {
+}
+[3] try {
     this.moveCurrentObjectToStorage();
 } catch (StorageFullException e) {
     // Enters blocked state
     this.state = ProducerState.blocking;
     this.actualBlockedTime -= TimeKeeper.currentTime();
     return;
-}[4] {
+}
+[4] {
     this.moveCurrentObjectToStorage();
-}[5] this.moveCurrentObjectToStorage();[6] {
+}
+[5] this.moveCurrentObjectToStorage();
+[6] {
     // Enters blocked state
     this.state = ProducerState.blocking;
     this.actualBlockedTime -= TimeKeeper.currentTime();
     return;
-}[7] // Enters blocked state
-this.state = ProducerState.blocking;[8] this.actualBlockedTime -= TimeKeeper.currentTime();[9] return;[10] // get nextStorage item
+}
+[7] // Enters blocked state
+this.state = ProducerState.blocking;
+[8] this.actualBlockedTime -= TimeKeeper.currentTime();
+[9] return;
+[10] // get nextStorage item
 try {
     this.receiveNextObject();
 } catch (StorageEmptyException e) {
@@ -65,13 +75,22 @@ try {
     this.state = ProducerState.starving;
     this.actualStarvedTime -= TimeKeeper.currentTime();
     return;
-}[11] {
+}
+[11] {
     this.receiveNextObject();
-}[12] this.receiveNextObject();[13] {
+}
+[12] this.receiveNextObject();
+[13] {
     // Enters starved state
     this.state = ProducerState.starving;
     this.actualStarvedTime -= TimeKeeper.currentTime();
     return;
-}[14] // Enters starved state
-this.state = ProducerState.starving;[15] this.actualStarvedTime -= TimeKeeper.currentTime();[16] return;[17] // calculate how long it will take
-double p = productionMean + productionRange * (randomProducer.nextDouble() - 0.5);[18] this.actualProductionTime += p;[19] EventQueue.currentQueue().insertEvent(new ProducerEvent(TimeKeeper.currentTime() + p, ProducerEvent.WILL_FINISH_OBJECT, this));
+}
+[14] // Enters starved state
+this.state = ProducerState.starving;
+[15] this.actualStarvedTime -= TimeKeeper.currentTime();
+[16] return;
+[17] // calculate how long it will take
+double p = productionMean + productionRange * (randomProducer.nextDouble() - 0.5);
+[18] this.actualProductionTime += p;
+[19] EventQueue.currentQueue().insertEvent(new ProducerEvent(TimeKeeper.currentTime() + p, ProducerEvent.WILL_FINISH_OBJECT, this));
