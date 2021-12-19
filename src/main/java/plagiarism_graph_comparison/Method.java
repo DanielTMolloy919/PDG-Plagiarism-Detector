@@ -49,12 +49,32 @@ public class Method {
 
         statement_blacklist = new ArrayList<Integer>();
 
+        end_id = 999;
+
+        if (statements.size() == 0) {
+            cfg.addVertex(0);
+            cfg.addVertex(end_id);
+            cfg.addEdge(0, end_id);
+            exporter("CFGs");
+            counter++;
+            return;
+        }
+
+        else if (statements.size() == 1) {
+            cfg.addVertex(0);
+            cfg.addVertex(1);
+            cfg.addVertex(end_id);
+            cfg.addEdge(0, 1);
+            cfg.addEdge(1, end_id);
+            exporter("CFGs");
+            counter++;
+            return;
+        }
+
         for (int i = 0; i < statements.size(); i++) {
             cfg.addVertex(i); // load all the statement nodes
             // statement_ids.add(i); // load all the statement ids into the list
         }
-
-        end_id = 999;
         
         cfg.addVertex(end_id); // end node
 
@@ -68,18 +88,18 @@ public class Method {
                 IfStmt ifstmt = statement.asIfStmt(); // get the specific if statement object
 
                 int then_id = statement_to_id(ifstmt.getThenStmt());
+                int last_then_child_id = get_last_child(then_id);
                 int subsequent_id = get_subsequent_sibling(current_id);
-                int last_child_id = get_last_child(then_id);
 
-                if (!is_statement_special(last_child_id)) { // link the end of 'then' to the next node, unless the node is another branching statement
-                    cfg.addEdge(last_child_id, subsequent_id);
+                if (!is_statement_special(last_then_child_id)) { // link the end of 'then' to the next node, unless the node is another branching statement
+                    cfg.addEdge(last_then_child_id, subsequent_id);
                 } 
                 
-                statement_blacklist.add(last_child_id); // ensure then isn't automatically linked to else
+                statement_blacklist.add(last_then_child_id); // ensure then isn't automatically linked to else
 
                 cfg.addEdge(current_id, then_id); // link if to then
 
-                if (ifstmt.hasElseBlock()) { // if there is an else statement, link if to else
+                if (ifstmt.getElseStmt().isPresent()) { // if there is an else statement, link if to else
                     int else_id = statement_to_id(ifstmt.getElseStmt().get());
 
                     cfg.addEdge(current_id, else_id);
@@ -131,7 +151,9 @@ public class Method {
             else if(statement.isTryStmt()) {
                 TryStmt trystmt = statement.asTryStmt();
 
-                int last_try_id = get_last_child(trystmt.getTryBlock().getStatements().stream().findFirst().get());
+                List<Statement> try_statements = trystmt.getTryBlock().getStatements();
+
+                int last_try_id = statement_to_id(try_statements.get(try_statements.size()-1));
 
                 int subsequent_id = get_subsequent_sibling(current_id);
 
@@ -170,6 +192,8 @@ public class Method {
         cfg.addEdge(last_statement_id, end_id);
 
         exporter("CFGs");
+
+        counter++;
     }
 
     private int statement_to_id(Statement statement) throws StatementNotFoundException {
@@ -268,6 +292,7 @@ public class Method {
 
             export.exportGraph(cfg, f);
         }
+        
     }
 
     public class StatementNotFoundException extends Exception {

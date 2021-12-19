@@ -1,0 +1,14 @@
+// Preconditions: The Producer is in a blocking state
+// Postcondition: The assembler's state is restored to blocking, the blocked chrono is updated and the Assemblers current item is passed to storage
+public void unblock() {
+    try {
+        this.moveCurrentObjectToStorage();
+        this.actualBlockedTime += TimeKeeper.currentTime();
+        this.state = ProducerState.working;
+        EventQueue.currentQueue().insertEvent(new ProducerEvent(TimeKeeper.currentTime(), ProducerEvent.CAN_START, this));
+    } catch (StorageFullException e) {
+        // Enters blocked state. This should never occur, unless the Storage object unblocks incorrectly
+        this.state = ProducerState.blocking;
+        return;
+    }
+}
