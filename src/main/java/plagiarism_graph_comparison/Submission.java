@@ -7,7 +7,7 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.utils.SourceRoot;
 
-import plagiarism_graph_comparison.Method.StatementNotFoundException;
+import plagiarism_graph_comparison.CFG.StatementNotFoundException;
 
 
 public class Submission {
@@ -16,7 +16,7 @@ public class Submission {
     ArrayList<Method> method_objects;
     int counter;
 
-    public Submission(SourceRoot root_dir) throws IOException, StatementNotFoundException {
+    public Submission(SourceRoot root_dir) throws IOException{
 
         SourceRoot source = root_dir;
         
@@ -40,7 +40,6 @@ public class Submission {
                 return;
             } catch (StatementNotFoundException e) {
                 e.printStackTrace();
-                return;
             }
         }); // create a method object for each node, which will build a pdg for each
     }
