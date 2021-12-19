@@ -7,6 +7,7 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.utils.SourceRoot;
 
+import plagiarism_graph_comparison.CDG.NoSinglePostdominatorException;
 import plagiarism_graph_comparison.CFG.StatementNotFoundException;
 
 
@@ -16,7 +17,7 @@ public class Submission {
     ArrayList<Method> method_objects;
     int counter;
 
-    public Submission(SourceRoot root_dir) throws IOException{
+    public Submission(SourceRoot root_dir) throws IOException, StatementNotFoundException, NoSinglePostdominatorException{
 
         SourceRoot source = root_dir;
         
@@ -30,18 +31,20 @@ public class Submission {
         
         compilations.stream().forEach(cp -> this.method_nodes.addAll(cp.findAll(MethodDeclaration.class))); // loop through each compilation unit, find all the method nodes and add them to the list
 
+        Method test_method = new Method(method_nodes.get(1));
+
         // iterate over all methods
 
-        method_nodes.stream().forEach(method_node -> {
-            try {
-                method_objects.add(new Method(method_node));
-            } catch (IOException e) {
-                e.printStackTrace();
-                return;
-            } catch (StatementNotFoundException e) {
-                e.printStackTrace();
-            }
-        }); // create a method object for each node, which will build a pdg for each
+        // method_nodes.stream().forEach(method_node -> {
+        //     try {
+        //         method_objects.add(new Method(method_node));
+        //     } catch (IOException e) {
+        //         e.printStackTrace();
+        //         return;
+        //     } catch (StatementNotFoundException e) {
+        //         e.printStackTrace();
+        //     }
+        // }); // create a method object for each node, which will build a pdg for each
     }
 
     

@@ -1,16 +1,96 @@
 [0] {
-    this.productionMean = mean;
-    this.productionRange = range;
-    this.nextStorage = next;
-    this.previousStorage = previous;
-    this.actualProductionTime = 0;
-    this.actualStarvedTime = 0;
-    this.actualBlockedTime = 0;
+    // pass to storage
+    if (this.currentObject != null) {
+        try {
+            this.moveCurrentObjectToStorage();
+        } catch (StorageFullException e) {
+            // Enters blocked state
+            this.state = ProducerState.blocking;
+            this.actualBlockedTime -= TimeKeeper.currentTime();
+            return;
+        }
+    }
+    // get nextStorage item
+    try {
+        this.receiveNextObject();
+    } catch (StorageEmptyException e) {
+        // Enters starved state
+        this.state = ProducerState.starving;
+        this.actualStarvedTime -= TimeKeeper.currentTime();
+        return;
+    }
+    // calculate how long it will take
+    double p = productionMean + productionRange * (randomProducer.nextDouble() - 0.5);
+    this.actualProductionTime += p;
+    EventQueue.currentQueue().insertEvent(new ProducerEvent(TimeKeeper.currentTime() + p, ProducerEvent.WILL_FINISH_OBJECT, this));
 }
-[1] this.productionMean = mean;
-[2] this.productionRange = range;
-[3] this.nextStorage = next;
-[4] this.previousStorage = previous;
-[5] this.actualProductionTime = 0;
-[6] this.actualStarvedTime = 0;
-[7] this.actualBlockedTime = 0;
+[1] // pass to storage
+if (this.currentObject != null) {
+    try {
+        this.moveCurrentObjectToStorage();
+    } catch (StorageFullException e) {
+        // Enters blocked state
+        this.state = ProducerState.blocking;
+        this.actualBlockedTime -= TimeKeeper.currentTime();
+        return;
+    }
+}
+[2] {
+    try {
+        this.moveCurrentObjectToStorage();
+    } catch (StorageFullException e) {
+        // Enters blocked state
+        this.state = ProducerState.blocking;
+        this.actualBlockedTime -= TimeKeeper.currentTime();
+        return;
+    }
+}
+[3] try {
+    this.moveCurrentObjectToStorage();
+} catch (StorageFullException e) {
+    // Enters blocked state
+    this.state = ProducerState.blocking;
+    this.actualBlockedTime -= TimeKeeper.currentTime();
+    return;
+}
+[4] {
+    this.moveCurrentObjectToStorage();
+}
+[5] this.moveCurrentObjectToStorage();
+[6] {
+    // Enters blocked state
+    this.state = ProducerState.blocking;
+    this.actualBlockedTime -= TimeKeeper.currentTime();
+    return;
+}
+[7] // Enters blocked state
+this.state = ProducerState.blocking;
+[8] this.actualBlockedTime -= TimeKeeper.currentTime();
+[9] return;
+[10] // get nextStorage item
+try {
+    this.receiveNextObject();
+} catch (StorageEmptyException e) {
+    // Enters starved state
+    this.state = ProducerState.starving;
+    this.actualStarvedTime -= TimeKeeper.currentTime();
+    return;
+}
+[11] {
+    this.receiveNextObject();
+}
+[12] this.receiveNextObject();
+[13] {
+    // Enters starved state
+    this.state = ProducerState.starving;
+    this.actualStarvedTime -= TimeKeeper.currentTime();
+    return;
+}
+[14] // Enters starved state
+this.state = ProducerState.starving;
+[15] this.actualStarvedTime -= TimeKeeper.currentTime();
+[16] return;
+[17] // calculate how long it will take
+double p = productionMean + productionRange * (randomProducer.nextDouble() - 0.5);
+[18] this.actualProductionTime += p;
+[19] EventQueue.currentQueue().insertEvent(new ProducerEvent(TimeKeeper.currentTime() + p, ProducerEvent.WILL_FINISH_OBJECT, this));

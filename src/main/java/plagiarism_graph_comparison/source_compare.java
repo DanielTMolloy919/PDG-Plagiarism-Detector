@@ -14,13 +14,16 @@ import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.utils.SourceRoot;
 
+import plagiarism_graph_comparison.CDG.NoSinglePostdominatorException;
+import plagiarism_graph_comparison.CFG.StatementNotFoundException;
+
 
 
 public class source_compare {
 
     private static final String root_folder_location = "test_files\\Base Programs\\1\\producer";
     
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, StatementNotFoundException, NoSinglePostdominatorException {
         
         Path root_folder = Paths.get(root_folder_location);
 

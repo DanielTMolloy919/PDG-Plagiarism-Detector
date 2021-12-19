@@ -4,6 +4,7 @@ import java.io.IOException;
 
 import com.github.javaparser.ast.body.MethodDeclaration;
 
+import plagiarism_graph_comparison.CDG.NoSinglePostdominatorException;
 import plagiarism_graph_comparison.CFG.StatementNotFoundException;
 
 public class Method {
@@ -11,12 +12,16 @@ public class Method {
     
     MethodDeclaration method_node; // The method node given to the constructor when a new method object is created
 
-    CFG cfg;
+    CFG cfg; // method's control flow graph
 
-    public Method(MethodDeclaration method_node) throws IOException, StatementNotFoundException {
+    CDG cdg; // method's control dependency graph
+
+    public Method(MethodDeclaration method_node) throws IOException, StatementNotFoundException, NoSinglePostdominatorException {
         this.method_node = method_node;
 
         this.cfg = new CFG(method_node, counter);
+
+        this.cdg = new CDG(cfg, counter);
 
         counter++;
     }
