@@ -1,7 +1,7 @@
 package plagiarism_graph_comparison;
 
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import com.github.javaparser.ast.stmt.Statement;
@@ -11,7 +11,6 @@ import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.AllDirectedPaths;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
-import org.jgrapht.traverse.DepthFirstIterator;
 
 public class CDG {
 
@@ -21,7 +20,7 @@ public class CDG {
     List<Integer> ipdominator_dict;
     int counter;
 
-    public CDG(CFG cfg_object,int counter) throws NoSinglePostdominatorException {
+    public CDG(CFG cfg_object,int counter) throws NoSinglePostdominatorException, IOException {
         this.cfg = cfg_object.node_graph;
         this.statements = cfg_object.statements;
         this.counter = counter;
@@ -42,11 +41,12 @@ public class CDG {
             for (int j = i + 1; j <= statements.size(); j++) {
                 if (!is_connection_eliminated(i, j)) {
                     node_graph.addEdge(i, j);
+                    Export.exporter(this, counter);
                 }
             }
         }
 
-        
+
     }
 
     private boolean is_connection_eliminated(int start_node, int end_node) {

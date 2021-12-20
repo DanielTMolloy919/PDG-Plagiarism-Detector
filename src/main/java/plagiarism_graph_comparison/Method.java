@@ -23,7 +23,7 @@ public class Method {
 
         Export.exporter(cfg, counter);
 
-        // this.cdg = new CDG(cfg, counter);
+        this.cdg = new CDG(cfg, counter);
 
         counter++;
     }
