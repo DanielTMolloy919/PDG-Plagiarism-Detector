@@ -21,7 +21,9 @@ public class Method {
 
         this.cfg = new CFG(method_node, counter);
 
-        this.cdg = new CDG(cfg, counter);
+        Export.exporter(cfg, counter);
+
+        // this.cdg = new CDG(cfg, counter);
 
         counter++;
     }

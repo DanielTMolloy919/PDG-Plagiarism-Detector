@@ -46,9 +46,9 @@ public class CFG {
 
         statements = method_node.findAll(Statement.class); // load all the statements
 
-        exporter("Methods");
+        Export.exporter(method_node, counter);
 
-        exporter("Statements");
+        Export.exporter(statements, counter);
 
         statement_blacklist = new ArrayList<Integer>();
 
@@ -58,7 +58,7 @@ public class CFG {
             node_graph.addVertex(0);
             node_graph.addVertex(end_id);
             node_graph.addEdge(0, end_id);
-            exporter("CFGs");
+            Export.exporter(this,counter);
             return;
         }
 
@@ -68,13 +68,12 @@ public class CFG {
             node_graph.addVertex(end_id);
             node_graph.addEdge(0, 1);
             node_graph.addEdge(1, end_id);
-            exporter("CFGs");
+            Export.exporter(this,counter);
             return;
         }
 
         for (int i = 0; i < statements.size(); i++) {
             node_graph.addVertex(i); // load all the statement nodes
-            // statement_ids.add(i); // load all the statement ids into the list
         }
 
         node_graph.addVertex(end_id); // end node
@@ -185,7 +184,7 @@ public class CFG {
                 node_graph.addEdge(current_id, current_id + 1);
             }
 
-            exporter("CFGs");
+            Export.exporter(this,counter);
 
             current_id++;
         }
@@ -193,8 +192,6 @@ public class CFG {
         int last_statement_id = statements.size() - 1;
 
         node_graph.addEdge(last_statement_id, end_id);
-
-        exporter("CFGs");
 
         return;
     }
@@ -266,44 +263,6 @@ public class CFG {
                 || statement.isForEachStmt() || statement.isForStmt() || statement.isIfStmt()
                 || statement.isReturnStmt() || statement.isSwitchStmt() || statement.isTryStmt()
                 || statement.isWhileStmt();
-    }
-
-    private void exporter(String type) throws IOException {
-
-        String file_extension = (type == "CFGs") ? ".dot" : ".txt";
-        File export_file = new File("graphs\\" + type + "\\file" + counter + file_extension);
-
-        export_file.getParentFile().mkdirs();
-        export_file.createNewFile();
-
-        FileWriter f = new FileWriter(export_file);
-
-        if (type == "Methods") {
-            f.write(this.method_node.toString());
-
-            f.flush();
-            f.close();
-        }
-
-        else if (type == "Statements") {
-            String body = new String();
-
-            for (int j = 0; j < this.statements.size(); j++) {
-                String addition = "[" + j + "] " + this.statements.get(j).toString() + "\n";
-                body += addition;
-            }
-            f.write(body);
-
-            f.flush();
-            f.close();
-        }
-
-        else if (type == "CFGs") {
-            DOTExporter<Integer, DefaultEdge> export = new DOTExporter<>(v -> v.toString());
-
-            export.exportGraph(node_graph, f);
-        }
-
     }
 
     public class StatementNotFoundException extends Exception {

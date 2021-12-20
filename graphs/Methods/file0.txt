@@ -1,30 +1,11 @@
-// Preconditions: None
-// Postcondition: Upon success an item is retreived from the previousStorage storage node, processed and passed to the nextStorage storage node.
-// If there was no items in the previousStorage storage node, the Producer enters a starving state
-// If there was no more capacity in the nextStorage storage node, the Producer enters a blocking state
-public void processNextObject() {
-    // pass to storage
-    if (this.currentObject != null) {
-        try {
-            this.moveCurrentObjectToStorage();
-        } catch (StorageFullException e) {
-            // Enters blocked state
-            this.state = ProducerState.blocking;
-            this.actualBlockedTime -= TimeKeeper.currentTime();
-            return;
-        }
-    }
-    // get nextStorage item
-    try {
-        this.receiveNextObject();
-    } catch (StorageEmptyException e) {
-        // Enters starved state
-        this.state = ProducerState.starving;
-        this.actualStarvedTime -= TimeKeeper.currentTime();
-        return;
-    }
-    // calculate how long it will take
-    double p = productionMean + productionRange * (randomProducer.nextDouble() - 0.5);
-    this.actualProductionTime += p;
-    EventQueue.currentQueue().insertEvent(new ProducerEvent(TimeKeeper.currentTime() + p, ProducerEvent.WILL_FINISH_OBJECT, this));
+// Preconditions: Method should only be called once
+// Postcondition: The Producer is initialised with the default values, as well as the passed parameters
+protected void initialise(double mean, double range, Storage next, Storage previous) {
+    this.productionMean = mean;
+    this.productionRange = range;
+    this.nextStorage = next;
+    this.previousStorage = previous;
+    this.actualProductionTime = 0;
+    this.actualStarvedTime = 0;
+    this.actualBlockedTime = 0;
 }
