@@ -75,4 +75,21 @@ public class Export {
 
         export.exportGraph(cdg.node_graph, f);
     }
+
+    public static void exporter(PDG pdg,int counter) throws IOException {
+
+        File export_file = new File("graphs\\CDGs\\file" + counter + ".dot");
+
+        export_file.getParentFile().mkdirs();
+        export_file.createNewFile();
+
+        FileWriter f = new FileWriter(export_file);
+            
+        DOTExporter<Integer, DefaultEdge> export = new DOTExporter<>(v -> v.toString());
+
+        export.exportGraph(pdg.node_graph, f);
+    }
+
+    public static void exporter(DDG ddg,int counter) throws IOException {
+        File export_file = new File("graphs\\DDGs\\file" + counter + ".dot");
 }

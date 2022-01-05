@@ -12,10 +12,6 @@ import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.stmt.Statement;
 
 public class Test {
-    // public static void main(String[] args) throws FileNotFoundException {
-    //     System.out.println("test");
-        
-    // }
 
     
 }
