@@ -12,7 +12,7 @@ import org.jgrapht.graph.DefaultEdge;
 public class DDG {
     Graph<Integer, DefaultEdge> cfg;
     MethodDeclaration method_node;
-    Graph<Integer, DefaultEdge> node_graph;
+    Graph<BasicBlock, DefaultEdge> node_graph;
     int counter;
 
     List<Statement> statements; // a list of all the statements found in the method
@@ -28,7 +28,7 @@ public class DDG {
         node_graph = new DefaultDirectedGraph<>(DefaultEdge.class); // initialize the jgrapht graph
 
         for (int i = 0; i < statements.size(); i++) {
-            node_graph.addVertex(i); // load all the statement nodes
+            node_graph.addVertex(new BasicBlock(statements.get(i), i)); // load all the statement nodes
         }
 
         for (Statement statement : statements) {
