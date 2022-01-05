@@ -2,8 +2,12 @@ package plagiarism_graph_comparison;
 
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.expr.SimpleName;
+import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.Statement;
 
 import org.jgrapht.Graph;
@@ -24,6 +28,7 @@ public class DDG {
         // this.cfg = cfg.node_graph;
         this.counter = counter;
         this.method_node = method_node;
+        
 
         statements = method_node.findAll(Statement.class); // load all the statements
 
@@ -36,8 +41,30 @@ public class DDG {
             Statement_to_BasicBlock.put(Integer.toString(i), bb);
         }
 
+        // map that returns the last time a given variable was assigned
+        LinkedHashMap<SimpleName, BasicBlock> Variable_to_BasicBlock = new LinkedHashMap<SimpleName, BasicBlock>();
+
         for (int i = 0; i < statements.size(); i++) {
-            System.out.println(Statement_to_BasicBlock.get(Integer.toString(i)).toString());
+            Statement statement = statements.get(i);
+            if (statement.isExpressionStmt()) {
+                // System.out.println(Statement_to_BasicBlock.get(Integer.toString(i)).toString());
+
+                // if its a variable assignment, continue
+                if (statement.asExpressionStmt().getExpression().isVariableDeclarationExpr()) {
+                    // get the variable associated with a variable assignment
+                    List<SimpleName> variables = statement.asExpressionStmt().getExpression().asVariableDeclarationExpr().getVariables().stream().map(x -> x.getName()).collect(Collectors.toList());
+
+                    for (SimpleName variable : variables) { // for each variable, 
+                        BasicBlock new_bb = Variable_to_BasicBlock.get(variable);
+
+                        if (Variable_to_BasicBlock.containsKey(variable)) { // if a previous assignment exists
+                            node_graph.addEdge(Statement_to_BasicBlock.get(Integer.toString(i)), new_bb); // link it in the DDG
+                        }
+
+                        Variable_to_BasicBlock.put(variable, new_bb); // then update what the previous assignment for this variable is, or add a new entry if this is the variable's first assignment
+                    }
+                }
+            }
         }
 
         System.out.println("yay");

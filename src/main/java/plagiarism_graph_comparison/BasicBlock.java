@@ -23,6 +23,6 @@ public class BasicBlock {
 
     @Override
     public String toString() {
-        return "[" + id + "] " + statement.toString().substring(0,15);
+        return "[" + id + "] " + statement.toString().substring(0,20);
     }
 }
