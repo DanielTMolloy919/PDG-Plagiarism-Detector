@@ -1,11 +1,13 @@
 package plagiarism_graph_comparison;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.SimpleName;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.Statement;
@@ -42,29 +44,38 @@ public class DDG {
         }
 
         // map that returns the last time a given variable was assigned
-        LinkedHashMap<SimpleName, BasicBlock> Variable_to_BasicBlock = new LinkedHashMap<SimpleName, BasicBlock>();
+        LinkedHashMap<String, BasicBlock> Variable_to_BasicBlock = new LinkedHashMap<String, BasicBlock>();
 
-        for (int i = 0; i < statements.size(); i++) {
-            Statement statement = statements.get(i);
+        LinkedHashMap<Expression, BasicBlock> Expression_to_BasicBlock = new LinkedHashMap<Expression, BasicBlock>();
+
+        List<Expression> expressions = new ArrayList<Expression>();
+        
+        // statements.stream().filter(statement -> statement.isExpressionStmt()).map(statement -> statement.asExpressionStmt().getExpression()).collect(Collectors.toList());
+
+        // get all statements that are expressions
+        for (Statement statement : statements) {
             if (statement.isExpressionStmt()) {
-                // System.out.println(Statement_to_BasicBlock.get(Integer.toString(i)).toString());
-
-                // if its a variable assignment, continue
-                if (statement.asExpressionStmt().getExpression().isVariableDeclarationExpr()) {
-                    // get the variable associated with a variable assignment
-                    List<SimpleName> variables = statement.asExpressionStmt().getExpression().asVariableDeclarationExpr().getVariables().stream().map(x -> x.getName()).collect(Collectors.toList());
-
-                    for (SimpleName variable : variables) { // for each variable, 
-                        BasicBlock new_bb = Variable_to_BasicBlock.get(variable);
-
-                        if (Variable_to_BasicBlock.containsKey(variable)) { // if a previous assignment exists
-                            node_graph.addEdge(Statement_to_BasicBlock.get(Integer.toString(i)), new_bb); // link it in the DDG
-                        }
-
-                        Variable_to_BasicBlock.put(variable, new_bb); // then update what the previous assignment for this variable is, or add a new entry if this is the variable's first assignment
-                    }
-                }
+                Expression expression = statement.asExpressionStmt().getExpression();
+                expressions.add(expression);
+                Expression_to_BasicBlock.put(expression, Statement_to_BasicBlock.get(statement)); // make sure the expressions associated statement can be found
             }
+        }
+
+        // extract the variables out of each expression
+        for (Expression expression : expressions) {
+            List<String> variables = new ArrayList<>();
+
+            if (expression.isVariableDeclarationExpr()) { // if a variable is being declared, i.e. int i = 1;
+                variables = expression.asVariableDeclarationExpr().getVariables().stream().map(x -> x.getName().asString()).collect(Collectors.toList()); // extract variable strings being assigned
+            }
+            
+            else if (expression.isAssignExpr()) {
+                // get the two variables comprising an assignment expression
+                variables.add(expression.asAssignExpr().getTarget().toString());
+                variables.add(expression.asAssignExpr().getValue().toString());
+            }
+
+            variables.stream().forEach(x -> Variable_to_BasicBlock.put(x, Expression_to_BasicBlock.get(expression))); // add a new entry, as this is the first time we will have seen the variable
         }
 
         System.out.println("yay");
