@@ -92,5 +92,14 @@ public class Export {
 
     public static void exporter(DDG ddg ,int counter) throws IOException {
         File export_file = new File("graphs\\DDGs\\file" + counter + ".dot");
+
+        export_file.getParentFile().mkdirs();
+        export_file.createNewFile();
+
+        FileWriter f = new FileWriter(export_file);
+            
+        DOTExporter<BasicBlock, DefaultEdge> export = new DOTExporter<>(v -> v.toString());
+
+        export.exportGraph(ddg.node_graph, f);
     }
 }

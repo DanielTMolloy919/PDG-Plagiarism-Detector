@@ -1,5 +1,6 @@
 package plagiarism_graph_comparison;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -23,41 +24,45 @@ public class DDG {
     int counter;
 
     List<Statement> statements; // a list of all the statements found in the method
-    LinkedHashMap<String, BasicBlock> Statement_to_BasicBlock;
+    LinkedHashMap<String, BasicBlock> Statement_id_to_BasicBlock;
+    LinkedHashMap<Integer, BasicBlock> Statement_to_BasicBlock;
     
     
-    public DDG(MethodDeclaration method_node, int counter) {
+    public DDG(MethodDeclaration method_node, int counter) throws IOException {
         // this.cfg = cfg.node_graph;
         this.counter = counter;
         this.method_node = method_node;
-        
+
+        Export.exporter(method_node, counter);        
 
         statements = method_node.findAll(Statement.class); // load all the statements
 
+        Export.exporter(statements, counter);
+
         node_graph = new DefaultDirectedGraph<>(DefaultEdge.class); // initialize the jgrapht graph
-        Statement_to_BasicBlock = new LinkedHashMap<String, BasicBlock>();
+        Statement_id_to_BasicBlock = new LinkedHashMap<>();
 
         for (int i = 0; i < statements.size(); i++) {
             BasicBlock bb = new BasicBlock(statements.get(i), i);
             node_graph.addVertex(bb); // load all the statement nodes
-            Statement_to_BasicBlock.put(Integer.toString(i), bb);
+            Statement_id_to_BasicBlock.put(Integer.toString(i), bb);
         }
 
         // map that returns the last time a given variable was assigned
-        LinkedHashMap<String, BasicBlock> Variable_to_BasicBlock = new LinkedHashMap<String, BasicBlock>();
-
-        LinkedHashMap<Expression, BasicBlock> Expression_to_BasicBlock = new LinkedHashMap<Expression, BasicBlock>();
+        LinkedHashMap<String, BasicBlock> Variable_to_BasicBlock = new LinkedHashMap<>();
+        LinkedHashMap<Expression, BasicBlock> Expression_to_BasicBlock = new LinkedHashMap<>();
 
         List<Expression> expressions = new ArrayList<Expression>();
         
         // statements.stream().filter(statement -> statement.isExpressionStmt()).map(statement -> statement.asExpressionStmt().getExpression()).collect(Collectors.toList());
 
         // get all statements that are expressions
-        for (Statement statement : statements) {
+        for (int i = 0; i < statements.size(); i++) {
+            Statement statement = statements.get(i);
             if (statement.isExpressionStmt()) {
                 Expression expression = statement.asExpressionStmt().getExpression();
                 expressions.add(expression);
-                Expression_to_BasicBlock.put(expression, Statement_to_BasicBlock.get(statement)); // make sure the expressions associated statement can be found
+                Expression_to_BasicBlock.put(expression, Statement_id_to_BasicBlock.get(Integer.toString(i))); // makes sure the expression's associated statement can be found later on
             }
         }
 
@@ -75,8 +80,16 @@ public class DDG {
                 variables.add(expression.asAssignExpr().getValue().toString());
             }
 
-            variables.stream().forEach(x -> Variable_to_BasicBlock.put(x, Expression_to_BasicBlock.get(expression))); // add a new entry, as this is the first time we will have seen the variable
+            for (String variable : variables) {
+                if (Variable_to_BasicBlock.containsKey(variable)) { // if there's a previous occurance of this variable, add a link to it in the DDG
+                    node_graph.addEdge(Expression_to_BasicBlock.get(expression), Variable_to_BasicBlock.get(variable));
+                }
+
+                Variable_to_BasicBlock.put(variable, Expression_to_BasicBlock.get(expression)); // update the last occurrence of this variable
+            }
         }
+
+        Export.exporter(this, counter);
 
         System.out.println("yay");
     }
