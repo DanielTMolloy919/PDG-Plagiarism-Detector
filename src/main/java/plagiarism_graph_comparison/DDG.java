@@ -19,33 +19,32 @@ import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 
 public class DDG {
-    CFG cfg;
-    MethodDeclaration method_node;
-    Graph<BasicBlock, DefaultEdge> node_graph;
+    List<Statement> statements;
+    List<BasicBlock> basic_blocks;
+    LinkedHashMap<String, BasicBlock> Statement_id_to_BasicBlock;
     int counter;
+
+    CFG cfg;
+
+    Graph<BasicBlock, DefaultEdge> node_graph; // The method's data dependence graph
 
     List<UniqueExpression> expressions;
     LinkedHashMap<UniqueExpression, BasicBlock> Expression_to_BasicBlock;
     LinkedHashMap<String, BasicBlock> Variable_to_BasicBlock;
-
-    List<Statement> statements; // a list of all the statements found in the method
-    LinkedHashMap<String, BasicBlock> Statement_id_to_BasicBlock;
-    LinkedHashMap<Integer, BasicBlock> Statement_to_BasicBlock;
     
-    public DDG(MethodDeclaration method_node, int counter, CFG cfg) throws IOException {
-        this.cfg = cfg;
+    public DDG(Blocks blocks, int counter, CFG cfg) throws IOException {
+        
+        this.statements = blocks.statements;
+        this.basic_blocks = blocks.blocks;
+        this.Statement_id_to_BasicBlock = blocks.Statement_id_to_BasicBlock;
         this.counter = counter;
-        this.method_node = method_node;
 
-        statements = method_node.findAll(Statement.class); // load all the statements
+        node_graph = new DefaultDirectedGraph<>(DefaultEdge.class);
 
-        node_graph = new DefaultDirectedGraph<>(DefaultEdge.class); // initialize the jgrapht graph
-        Statement_id_to_BasicBlock = new LinkedHashMap<>();
+        this.cfg = cfg;
 
-        for (int i = 0; i < statements.size(); i++) {
-            BasicBlock bb = new BasicBlock(statements.get(i), i);
-            node_graph.addVertex(bb); // load all the statement nodes
-            Statement_id_to_BasicBlock.put(Integer.toString(i), bb);
+        for (BasicBlock basicBlock : basic_blocks) {
+            node_graph.addVertex(basicBlock); // load all the statement nodes
         }
 
         // map that returns the last time a given variable was assigned
@@ -54,8 +53,6 @@ public class DDG {
 
         expressions = new ArrayList<UniqueExpression>();
         
-        // statements.stream().filter(statement -> statement.isExpressionStmt()).map(statement -> statement.asExpressionStmt().getExpression()).collect(Collectors.toList());
-
         // get all statements that are expressions
         for (int i = 0; i < statements.size(); i++) {
             Statement statement = statements.get(i);
@@ -81,11 +78,6 @@ public class DDG {
                 ExpressionImporter(expression, i);
             }
         }
-        
-        // if (expressions.size() >= 10) {
-        //     Export.exporter(method_node, counter);
-        //     Export.exporter(statements, counter);
-        // }
 
         // extract the variables out of each expression
         for (UniqueExpression uexpression : expressions) {
@@ -112,23 +104,18 @@ public class DDG {
             }
         }
 
-        if (expressions.size() >= 10) {
-            Export.exporter(this, counter);
-        }
-
-        System.out.println("yay");
+        // if (expressions.size() >= 10) {
+        Export.exporter(this, counter);
+        // }
     }
 
     public void ExpressionImporter(UniqueExpression expression, int i) {
         expressions.add(expression);
         Expression_to_BasicBlock.put(expression, Statement_id_to_BasicBlock.get(Integer.toString(i))); // makes sure the expression's associated statement can be found later on
     }
-
-    public void cfg_annotator() {
-        
-    }
 }
 
+// A small class to make every expression unique (i.e. differentiate expressions with the same hashcode) for use in LinkedHashMaps
 class UniqueExpression {
     Expression expression;
     String id;

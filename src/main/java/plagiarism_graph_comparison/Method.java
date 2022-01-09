@@ -12,7 +12,7 @@ public class Method {
     
     MethodDeclaration method_node; // The method node given to the constructor when a new method object is created
 
-    StatementGraph statement_graph; // The directed graph containing statement nodes
+    Blocks statement_graph; // The directed graph containing statement nodes
 
     CFG cfg; // method's control flow graph
 
@@ -27,7 +27,7 @@ public class Method {
 
         Export.exporter(method_node, counter);
 
-        this.statement_graph = new StatementGraph(method_node);
+        this.statement_graph = new Blocks(method_node);
         
         Export.exporter(statement_graph.statements, counter);
 
@@ -37,7 +37,7 @@ public class Method {
 
         // this.cdg = new CDG(cfg, counter);
 
-        // this.ddg = new DDG(method_node, counter, cfg);
+        this.ddg = new DDG(statement_graph, counter, cfg);
 
         // this.pdg = new PDG(method_node, counter);
 

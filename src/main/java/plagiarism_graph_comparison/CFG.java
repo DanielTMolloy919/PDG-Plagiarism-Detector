@@ -10,20 +10,19 @@ import java.util.OptionalInt;
 import java.util.stream.IntStream;
 
 import com.github.javaparser.ast.NodeList;
-import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.stmt.*;
 
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
-import org.jgrapht.nio.dot.DOTExporter;
 
 public class CFG {
-    Graph<BasicBlock, DefaultEdge> node_graph; // The method's control flow diagram
-    LinkedHashMap<String, BasicBlock> Statement_id_to_BasicBlock;
     List<Statement> statements;
-
+    List<BasicBlock> basic_blocks;
+    LinkedHashMap<String, BasicBlock> Statement_id_to_BasicBlock;
     int counter;
+
+    Graph<BasicBlock, DefaultEdge> node_graph; // The method's control flow diagram
     
     List<Integer> statement_blacklist; // a list of statements to skip iteration - they have already been taken into account
 
@@ -35,18 +34,25 @@ public class CFG {
     private int test_id;
 
 
-    public CFG(StatementGraph statement_graph, int counter) throws IOException, StatementNotFoundException {
+    public CFG(Blocks blocks, int counter) throws IOException, StatementNotFoundException {
 
-        this.node_graph = statement_graph.node_graph;
-        this.Statement_id_to_BasicBlock = statement_graph.Statement_id_to_BasicBlock;
-        this.statements = statement_graph.statements;
+        this.statements = blocks.statements;
+        this.basic_blocks = blocks.blocks;
+        this.Statement_id_to_BasicBlock = blocks.Statement_id_to_BasicBlock;
         this.counter = counter;
+
+        node_graph = new DefaultDirectedGraph<>(DefaultEdge.class);
+
+        for (BasicBlock basicBlock : basic_blocks) {
+            node_graph.addVertex(basicBlock); // load all the statement nodes
+        }
 
         Export.exporter(statements, counter);
 
         statement_blacklist = new ArrayList<Integer>();
 
         BasicBlock bb;
+
         bb = new BasicBlock(true);
         node_graph.addVertex(bb);
         Statement_id_to_BasicBlock.put("START", bb);
@@ -57,11 +63,11 @@ public class CFG {
 
         if (statements.size() == 0) {
             link("START", "END");
+            Export.exporter(this,counter);
             return;
         }
 
-        else if (statements.size() == 1) {;
-
+        else if (statements.size() == 1) {
             link("START", 0);
             link(0, "END");
 
