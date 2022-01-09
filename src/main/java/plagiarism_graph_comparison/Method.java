@@ -12,6 +12,8 @@ public class Method {
     
     MethodDeclaration method_node; // The method node given to the constructor when a new method object is created
 
+    StatementGraph statement_graph; // The directed graph containing statement nodes
+
     CFG cfg; // method's control flow graph
 
     CDG cdg; // method's control dependency graph
@@ -23,7 +25,9 @@ public class Method {
     public Method(MethodDeclaration method_node) throws IOException, StatementNotFoundException, NoSinglePostdominatorException {
         this.method_node = method_node;
 
-        this.cfg = new CFG(method_node, counter);
+        this.statement_graph = new StatementGraph(method_node);
+
+        this.cfg = new CFG(statement_graph, counter);
 
         // Export.exporter(cfg, counter);
 

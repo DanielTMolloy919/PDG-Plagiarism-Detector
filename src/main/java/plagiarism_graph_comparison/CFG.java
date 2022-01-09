@@ -4,11 +4,11 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.OptionalInt;
 import java.util.stream.IntStream;
 
-import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.stmt.*;
@@ -19,64 +19,59 @@ import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.nio.dot.DOTExporter;
 
 public class CFG {
-    MethodDeclaration method_node;
+    Graph<BasicBlock, DefaultEdge> node_graph; // The method's control flow diagram
+    LinkedHashMap<String, BasicBlock> Statement_id_to_BasicBlock;
+    List<Statement> statements;
+
     int counter;
-
-    List<Statement> statements; // a list of all the statements found in the method
     
-    List<Integer> statement_blacklist; // a list of statements to skip iteration - they have already been taken into
-                                        // account
-
-    Graph<Integer, DefaultEdge> node_graph; // The method's control flow diagram
-
-    int end_id; // This is the ID of the last statement in the method
+    List<Integer> statement_blacklist; // a list of statements to skip iteration - they have already been taken into account
 
     int current_id; // When looping through each statement, this is the ID of the current statement
+
+    int end_id;
 
     private Statement original_statement;
     private int test_id;
 
 
-    public CFG(MethodDeclaration method_node, int counter) throws IOException, StatementNotFoundException {
+    public CFG(StatementGraph statement_graph, int counter) throws IOException, StatementNotFoundException {
 
-        this.method_node = method_node;
+        this.node_graph = statement_graph.node_graph;
+        this.Statement_id_to_BasicBlock = statement_graph.Statement_id_to_BasicBlock;
+        this.statements = statement_graph.statements;
         this.counter = counter;
 
-        node_graph = new DefaultDirectedGraph<>(DefaultEdge.class); // initialize the jgrapht graph
-
-        statements = method_node.findAll(Statement.class); // load all the statements
-
-        Export.exporter(method_node, counter);
+        // Export.exporter(method_node, counter);
 
         Export.exporter(statements, counter);
 
         statement_blacklist = new ArrayList<Integer>();
 
-        end_id = 999;
+        BasicBlock bb;
+        bb = new BasicBlock(true);
+        node_graph.addVertex(bb);
+        Statement_id_to_BasicBlock.put("START", bb);
+
+        bb = new BasicBlock(false);
+        node_graph.addVertex(bb);
+        Statement_id_to_BasicBlock.put("END", bb);
 
         if (statements.size() == 0) {
-            node_graph.addVertex(0);
-            node_graph.addVertex(end_id);
-            node_graph.addEdge(0, end_id);
+            link("START", "END");
+            return;
+        }
+
+        else if (statements.size() == 1) {;
+
+            link("START", 0);
+            link(0, "END");
+
             Export.exporter(this,counter);
             return;
         }
 
-        else if (statements.size() == 1) {
-            node_graph.addVertex(0);
-            node_graph.addVertex(1);
-            node_graph.addVertex(end_id);
-            node_graph.addEdge(0, 1);
-            node_graph.addEdge(1, end_id);
-            Export.exporter(this,counter);
-            return;
-        }
-
-        for (int i = 0; i < statements.size(); i++) {
-            node_graph.addVertex(i); // load all the statement nodes
-        }
-
-        node_graph.addVertex(end_id); // end node
+        end_id = 999;
 
         for (int i = 0; i < statements.size() - 1; i++) { // loop through each statement
 
@@ -90,43 +85,41 @@ public class CFG {
                 int last_then_child_id = get_last_child(then_id);
                 int subsequent_id = get_subsequent_sibling(current_id);
 
-                if (!is_statement_special(last_then_child_id)) { // link the end of 'then' to the next node, unless
-                                                                    // the
-                                                                    // node is another branching statement
-                    node_graph.addEdge(last_then_child_id, subsequent_id);
+                if (!is_statement_special(last_then_child_id)) { // link the end of 'then' to the next node, unless the node is another branching statement
+                    link(last_then_child_id, subsequent_id);
                 }
 
                 statement_blacklist.add(last_then_child_id); // ensure then isn't automatically linked to else
 
-                node_graph.addEdge(current_id, then_id); // link if to then
+                link(current_id, then_id); // link if to then
 
                 if (ifstmt.getElseStmt().isPresent()) { // if there is an else statement, link if to else
                     int else_id = statement_to_id(ifstmt.getElseStmt().get());
 
-                    node_graph.addEdge(current_id, else_id);
+                    link(current_id, else_id);
                 }
 
                 else { // if there isn't and else statement and if evaluates to false, if should be
                         // linked to the subsequent node
-                    node_graph.addEdge(current_id, subsequent_id);
+                    link(current_id, subsequent_id);
                 }
             }
 
             // if its a 'for' or `do-while` statement
             else if (statement.isForStmt() || statement.isDoStmt() || statement.isForEachStmt()) {
-                node_graph.addEdge(get_last_child(current_id), current_id);
+                link(get_last_child(current_id), current_id);
             }
 
             // if its a 'while' statement
             else if (statement.isWhileStmt()) {
                 int last_child_id = get_last_child(current_id);
 
-                node_graph.addEdge(get_last_child(last_child_id), current_id);
+                link(get_last_child(last_child_id), current_id);
                 statement_blacklist.add(last_child_id);
 
                 int subsequent_id = get_subsequent_sibling(current_id);
 
-                node_graph.addEdge(current_id, subsequent_id);
+                link(current_id, subsequent_id);
             }
 
             // if its a 'case-switch' statement
@@ -143,8 +136,8 @@ public class CFG {
                     int entry_id = statement_to_id(entry);
                     int last_child_id = get_last_child(entry_id);
 
-                    node_graph.addEdge(current_id, entry_id);
-                    node_graph.addEdge(last_child_id, get_subsequent_sibling(current_id));
+                    link(current_id, entry_id);
+                    link(last_child_id, get_subsequent_sibling(current_id));
                     statement_blacklist.add(last_child_id);
                 }
             }
@@ -159,29 +152,29 @@ public class CFG {
 
                 int subsequent_id = get_subsequent_sibling(current_id);
 
-                node_graph.addEdge(last_try_id, subsequent_id);
-                node_graph.addEdge(current_id, current_id + 1);
+                link(last_try_id, subsequent_id);
+                link(current_id, current_id + 1);
 
                 statement_blacklist.add(subsequent_id - 1);
             }
 
             // if its a `return` statement
             else if (statement.isReturnStmt()) {
-                node_graph.addEdge(current_id, end_id);
+                link(current_id, "END");
             }
 
             // if its a `break` statement
             else if (statement.isBreakStmt()) {
-                node_graph.addEdge(current_id, end_id);
+                link(current_id, "END");
             }
 
             // if its a `continue` statement
             else if (statement.isContinueStmt()) {
-                node_graph.addEdge(current_id, statement_to_id(statement.findAncestor(Statement.class).get()));
+                link(current_id, statement_to_id(statement.findAncestor(Statement.class).get()));
             }
 
             else if (!statement_blacklist.contains(current_id)) { // if the statement isn't on the blacklist,
-                node_graph.addEdge(current_id, current_id + 1);
+                link(current_id, current_id + 1);
             }
 
             Export.exporter(this,counter);
@@ -191,7 +184,7 @@ public class CFG {
 
         int last_statement_id = statements.size() - 1;
 
-        node_graph.addEdge(last_statement_id, end_id);
+        link(last_statement_id, "END");
 
         return;
     }
@@ -201,6 +194,40 @@ public class CFG {
 
         return true;
     }
+
+    private void link(int start_id, int end_id) {
+        if (end_id == 999) {
+            link_meta(Integer.toString(start_id), "END");
+        }
+
+        else {
+            link_meta(Integer.toString(start_id), Integer.toString(end_id));
+        }
+    }
+
+    private void link(String start_id, int end_id) {
+        if (end_id == 999) {
+            link_meta(start_id, "END");
+        }
+
+        else {
+            link_meta(start_id, Integer.toString(end_id));
+        }
+    }
+
+    private void link(int start_id, String end_id) {
+        link_meta(Integer.toString(start_id), end_id);
+    }
+
+    private void link(String start_id, String end_id) {
+        link_meta(start_id, end_id);
+    }
+
+    private void link_meta(String start_id, String end_id){
+        node_graph.addEdge(Statement_id_to_BasicBlock.get(start_id), Statement_id_to_BasicBlock.get(end_id));
+    }
+
+
 
     private int statement_to_id(Statement statement) throws StatementNotFoundException {
         OptionalInt statement_position = IntStream.range(0, statements.size())

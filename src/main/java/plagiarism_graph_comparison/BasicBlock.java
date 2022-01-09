@@ -14,9 +14,26 @@ import org.apache.commons.text.translate.LookupTranslator;
 public class BasicBlock {
     Integer id;
     Statement statement;
+    boolean is_start;
+    boolean is_end;
+
     public BasicBlock(Statement statement, int id) {
         this.statement = statement;
         this.id = id;
+        is_start = false;
+        is_end = false;
+    }
+
+    public BasicBlock(boolean start) {
+        if (start) {
+            is_start = true;
+            is_end = false;
+        }
+
+        else {
+            is_start = false;
+            is_end = true;
+        }
     }
 
     public Statement get_statement() {
