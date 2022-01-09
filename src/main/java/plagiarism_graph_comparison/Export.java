@@ -57,7 +57,7 @@ public class Export {
 
         FileWriter f = new FileWriter(export_file);
             
-        DOTExporter<Integer, DefaultEdge> export = new DOTExporter<>(v -> v.toString());
+        DOTExporter<BasicBlock, DefaultEdge> export = new DOTExporter<>(v -> v.toString());
 
         export.exportGraph(cfg.node_graph, f);
     }

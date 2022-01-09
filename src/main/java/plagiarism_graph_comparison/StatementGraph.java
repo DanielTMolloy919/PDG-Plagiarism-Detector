@@ -19,6 +19,7 @@ public class StatementGraph {
     public StatementGraph(MethodDeclaration method_node) {
 
         node_graph = new DefaultDirectedGraph<>(DefaultEdge.class);
+        Statement_id_to_BasicBlock = new LinkedHashMap<>();
         
         statements = method_node.findAll(Statement.class); // load all the statements
 

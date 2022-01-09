@@ -46,10 +46,21 @@ public class BasicBlock {
 
     @Override
     public String toString() {
-        String extract =  Integer.toString(id) + " - " + statement.toString().substring(0,20) ;
-        extract = DOTEscaper.DOTEscape(extract);
-        // extract=  "\"" + extract + "\"";
-        return extract;
+        if (is_start) {
+            return "START";
+        }
+
+        else if (is_end) {
+            return "END";
+        }
+
+        else {
+            String extract =  Integer.toString(id) ;//+ " - " + statement.toString().substring(0,20) ;
+            // extract = DOTEscaper.DOTEscape(extract);
+            // extract=  "\"" + extract + "\"";
+            return extract;
+        }
+        
     }
 }
 

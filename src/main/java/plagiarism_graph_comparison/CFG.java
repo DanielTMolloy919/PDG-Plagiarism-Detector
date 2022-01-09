@@ -42,8 +42,6 @@ public class CFG {
         this.statements = statement_graph.statements;
         this.counter = counter;
 
-        // Export.exporter(method_node, counter);
-
         Export.exporter(statements, counter);
 
         statement_blacklist = new ArrayList<Integer>();
@@ -72,6 +70,8 @@ public class CFG {
         }
 
         end_id = 999;
+
+        link("START", 0);
 
         for (int i = 0; i < statements.size() - 1; i++) { // loop through each statement
 
