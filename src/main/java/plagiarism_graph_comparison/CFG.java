@@ -196,6 +196,12 @@ public class CFG {
         return;
     }
 
+    public boolean path_exists(int start_id, int end_id) {
+        
+
+        return true;
+    }
+
     private int statement_to_id(Statement statement) throws StatementNotFoundException {
         OptionalInt statement_position = IntStream.range(0, statements.size())
                 .filter(id -> statements.get(id).equals(statement))

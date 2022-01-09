@@ -16,6 +16,8 @@ public class Method {
 
     CDG cdg; // method's control dependency graph
 
+    DDG ddg; // method's data dependency graph
+
     PDG pdg;
 
     public Method(MethodDeclaration method_node) throws IOException, StatementNotFoundException, NoSinglePostdominatorException {
@@ -23,11 +25,13 @@ public class Method {
 
         this.cfg = new CFG(method_node, counter);
 
-        Export.exporter(cfg, counter);
+        // Export.exporter(cfg, counter);
 
         // this.cdg = new CDG(cfg, counter);
 
-        this.pdg = new PDG(method_node, counter);
+        this.ddg = new DDG(method_node, counter, cfg);
+
+        // this.pdg = new PDG(method_node, counter);
 
         counter++;
     }

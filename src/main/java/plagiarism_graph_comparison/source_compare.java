@@ -21,7 +21,7 @@ import plagiarism_graph_comparison.CFG.StatementNotFoundException;
 
 public class source_compare {
 
-    private static final String root_folder_location = "test_files\\Base Programs\\1\\producer";
+    private static final String root_folder_location = "test_files\\Base Programs\\3\\seng2200";
     
     public static void main(String[] args) throws IOException, StatementNotFoundException, NoSinglePostdominatorException {
         

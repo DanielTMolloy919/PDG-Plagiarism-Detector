@@ -31,9 +31,9 @@ public class Submission {
         
         compilations.stream().forEach(cp -> this.method_nodes.addAll(cp.findAll(MethodDeclaration.class))); // loop through each compilation unit, find all the method nodes and add them to the list
 
-        // Method test_method = new Method(method_nodes.get(8));
+        Method test_method = new Method(method_nodes.get(64));
 
-        DDG my_ddg = new DDG(method_nodes.get(8), 0);
+        // DDG my_ddg = new DDG(method_nodes.get(64), 0);
 
         // iterate over all methods
 

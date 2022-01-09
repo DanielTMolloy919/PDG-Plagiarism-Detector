@@ -29,10 +29,9 @@ public class BasicBlock {
 
     @Override
     public String toString() {
-        // String extract =  Integer.toString(id); //+ statement.toString().substring(0,20);
-        // extract = extract.replace("\"", "\\\"");
-        // extract = "\"" + extract + "\"";
-        String extract = DOTEscaper.DOTEscape(Integer.toString(id));
+        String extract =  Integer.toString(id) + " - " + statement.toString().substring(0,20) ;
+        extract = DOTEscaper.DOTEscape(extract);
+        // extract=  "\"" + extract + "\"";
         return extract;
     }
 }
@@ -45,6 +44,15 @@ class DOTEscaper{
         final Map<CharSequence, CharSequence> escapeCustomMap = new HashMap<>();
                     
         escapeCustomMap.put("\"" ,"" );
+        escapeCustomMap.put("\'" ,"" );
+        escapeCustomMap.put("[" ,"" );
+        escapeCustomMap.put("]" ,"" );
+        escapeCustomMap.put("(" ,"" );
+        escapeCustomMap.put(")" ,"" );
+        escapeCustomMap.put("{" ,"" );
+        escapeCustomMap.put("\n" ,"" );
+        escapeCustomMap.put(";" ,"" );
+        escapeCustomMap.put(" ", "");
         ESCAPE_CUSTOM = new AggregateTranslator(new LookupTranslator(escapeCustomMap));
     }
 
