@@ -4,15 +4,20 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.stmt.Statement;
+import com.google.common.util.concurrent.Service.State;
 
 import org.jgrapht.Graph;
+import org.jgrapht.GraphPath;
+import org.jgrapht.alg.shortestpath.AllDirectedPaths;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.EdgeReversedGraph;
 
 public class DDG {
     List<Statement> statements;
@@ -21,6 +26,7 @@ public class DDG {
     int counter;
 
     CFG cfg;
+    EdgeReversedGraph<BasicBlock,DefaultEdge> reversed_cfg;
 
     Graph<BasicBlock, DefaultEdge> node_graph; // The method's data dependence graph
 
@@ -99,18 +105,13 @@ public class DDG {
             //load corresponding basic block with variable data
             Expression_to_BasicBlock.get(uexpression).set_variables(defined_variables, used_variables);
 
-            List<String> variables =  new ArrayList<>();
-            variables.addAll(defined_variables);
-            variables.addAll(used_variables);
+            reversed_cfg = new EdgeReversedGraph<BasicBlock, DefaultEdge>(cfg.node_graph);
 
+            Export.exporter(reversed_cfg, counter);
+        }
 
-            for (String variable : variables) {
-                if (Variable_to_BasicBlock.containsKey(variable)) { // if there's a previous occurance of this variable, add a link to it in the DDG
-                    node_graph.addEdge(Expression_to_BasicBlock.get(uexpression), Variable_to_BasicBlock.get(variable));
-                }
-
-                Variable_to_BasicBlock.put(variable, Expression_to_BasicBlock.get(uexpression)); // update the last occurrence of this variable
-            }
+        for (int j = 0; j < expressions.size(); j++) {
+            link_statement(Expression_to_BasicBlock.get(expressions.get(j)));
         }
 
         // if (expressions.size() >= 10) {
@@ -121,6 +122,69 @@ public class DDG {
     public void ExpressionImporter(UniqueExpression expression, int i) {
         expressions.add(expression);
         Expression_to_BasicBlock.put(expression, Statement_id_to_BasicBlock.get(Integer.toString(i))); // makes sure the expression's associated statement can be found later on
+    }
+
+    // If theres a previous instance of a variable being defined or used, link it in the DDG according to DDG construction rules
+    private void link_statement(BasicBlock post_bb) {
+
+        List<String> defined_variables = post_bb.defined_variables;
+        List<String> used_variables = post_bb.used_variables;
+
+        // if there are no variables in the statement, skip
+        if (defined_variables.size() == 0 && used_variables.size() == 0) {
+            return;
+        }
+
+        // get all paths in the cfg between this node and the start node
+        AllDirectedPaths<BasicBlock, DefaultEdge> all_directed_paths = new AllDirectedPaths<>(reversed_cfg);
+
+        List<GraphPath<BasicBlock, DefaultEdge>> paths = all_directed_paths.getAllPaths(post_bb, Statement_id_to_BasicBlock.get("START"), true, 100);
+        GraphPath<BasicBlock, DefaultEdge> path = paths.get(0);
+
+        // if we've got defined_variables, link up previous instances
+        if (defined_variables.size() != 0) {
+            for (String variable : defined_variables) {
+                find_previous_vars(path, post_bb ,variable, true);
+            }
+        }
+
+        if (used_variables.size() != 0) {
+            for (String variable : used_variables) {
+                find_previous_vars(path, post_bb ,variable, false);
+            }
+        }
+    }
+
+
+    private void find_previous_vars(GraphPath<BasicBlock, DefaultEdge> path, BasicBlock post_bb, String variable, boolean defined_variable) {
+
+        // get all the basic blocks in a cfg path, and iterate through them
+        List<BasicBlock> vertexes = path.getVertexList();
+
+        // remove the first vertex of the path, since this is going to be post_bb
+        vertexes.remove(0);
+
+        for (BasicBlock pre_bb : vertexes) {
+            // if we run across a previous definition of the variable
+            if (pre_bb.defined_variables != null) {
+                if (pre_bb.defined_variables.contains(variable)) {
+                    // link it in the dd
+                    node_graph.addEdge(pre_bb, post_bb);
+                    // return since we've found another definition
+                    return;
+                }
+            }       
+            // or if we run across a previous use of the variable
+            if (pre_bb.used_variables != null) {
+                if (pre_bb.used_variables.contains(variable)) {
+                    // if current variable is a defined variable link it, otherwise skip, since there's no connection between two variable usages
+                    if (defined_variable) {
+                        node_graph.addEdge(pre_bb, post_bb);
+                        return;
+                    }
+                }
+            }
+        }
     }
 }
 

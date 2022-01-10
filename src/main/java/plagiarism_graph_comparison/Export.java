@@ -9,6 +9,7 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.stmt.Statement;
 
 import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.EdgeReversedGraph;
 import org.jgrapht.nio.dot.DOTExporter;
 
 public class Export {
@@ -101,5 +102,18 @@ public class Export {
         DOTExporter<BasicBlock, DefaultEdge> export = new DOTExporter<>(v -> v.toString());
 
         export.exportGraph(ddg.node_graph, f);
+    }
+
+    public static void exporter(EdgeReversedGraph<BasicBlock, DefaultEdge> node_graph, int counter) throws IOException {
+        File export_file = new File("graphs\\Reversed_CFGs\\file" + counter + ".dot");
+
+        export_file.getParentFile().mkdirs();
+        export_file.createNewFile();
+
+        FileWriter f = new FileWriter(export_file);
+            
+        DOTExporter<BasicBlock, DefaultEdge> export = new DOTExporter<>(v -> v.toString());
+
+        export.exportGraph(node_graph, f);
     }
 }
