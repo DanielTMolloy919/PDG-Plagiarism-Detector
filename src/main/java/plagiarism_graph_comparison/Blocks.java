@@ -18,9 +18,7 @@ public class Blocks {
     
     LinkedHashMap<String, BasicBlock> Statement_id_to_BasicBlock;
     public Blocks(MethodDeclaration method_node) {
-        statements = new NodeList<>();
-        
-        statements.addAll(method_node.findAll(Statement.class)); // load all the child statements
+        statements = method_node.findAll(Statement.class); // load all the statements
 
         blocks = new ArrayList<>();
         Statement_id_to_BasicBlock = new LinkedHashMap<>();
