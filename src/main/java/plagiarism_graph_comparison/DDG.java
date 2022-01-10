@@ -169,7 +169,7 @@ public class DDG {
             if (pre_bb.defined_variables != null) {
                 if (pre_bb.defined_variables.contains(variable)) {
                     // link it in the dd
-                    node_graph.addEdge(pre_bb, post_bb);
+                    node_graph.addEdge(post_bb, pre_bb);
                     // return since we've found another definition
                     return;
                 }
@@ -179,7 +179,7 @@ public class DDG {
                 if (pre_bb.used_variables.contains(variable)) {
                     // if current variable is a defined variable link it, otherwise skip, since there's no connection between two variable usages
                     if (defined_variable) {
-                        node_graph.addEdge(pre_bb, post_bb);
+                        node_graph.addEdge(post_bb, pre_bb);
                         return;
                     }
                 }
