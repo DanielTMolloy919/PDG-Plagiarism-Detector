@@ -14,8 +14,14 @@ import org.apache.commons.text.translate.LookupTranslator;
 public class BasicBlock {
     Integer id;
     Statement statement;
+
+    // Support for special 'start' and 'end' CFG nodes
     boolean is_start;
     boolean is_end;
+
+    // Variables defined and used in the statement
+    List<String> defined_variables;
+    List<String> used_variables;
 
     public BasicBlock(Statement statement, int id) {
         this.statement = statement;
@@ -42,6 +48,15 @@ public class BasicBlock {
 
     public int get_id() {
         return this.id;
+    }
+
+    public void set_variables(List<String> defined_variables, List<String> used_variables) {
+        this.defined_variables = defined_variables;
+        this.used_variables = used_variables;
+    }
+
+    public void set_variables(List<String> defined_variables) {
+        this.defined_variables = defined_variables;
     }
 
     @Override

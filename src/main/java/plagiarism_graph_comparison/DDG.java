@@ -7,11 +7,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import com.github.javaparser.ast.NodeList;
-import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.Expression;
-import com.github.javaparser.ast.expr.SimpleName;
-import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.Statement;
 
 import org.jgrapht.Graph;
@@ -83,17 +79,30 @@ public class DDG {
         for (UniqueExpression uexpression : expressions) {
             Expression expression = uexpression.expression;
 
-            List<String> variables = new ArrayList<>();
+            List<String> defined_variables = new ArrayList<>();
+            List<String> used_variables = new ArrayList<>();
 
             if (expression.isVariableDeclarationExpr()) { // if a variable is being declared, i.e. int i = 1;
-                variables = expression.asVariableDeclarationExpr().getVariables().stream().map(x -> x.getName().asString()).collect(Collectors.toList()); // extract variable strings being assigned
+                defined_variables = expression.asVariableDeclarationExpr().getVariables().stream().map(x -> x.getName().asString()).collect(Collectors.toList()); // extract variable strings being assigned
             }
             
             else if (expression.isAssignExpr()) {
                 // get the two variables comprising an assignment expression
-                variables.add(expression.asAssignExpr().getTarget().toString());
-                variables.add(expression.asAssignExpr().getValue().toString());
+                defined_variables.add(expression.asAssignExpr().getTarget().toString());
+                used_variables.add(expression.asAssignExpr().getValue().toString());
             }
+
+            else if (expression.isMethodCallExpr()) {
+                used_variables.addAll(expression.asMethodCallExpr().getArguments().stream().map(x -> x.toString()).collect(Collectors.toList()));
+            }
+
+            //load corresponding basic block with variable data
+            Expression_to_BasicBlock.get(uexpression).set_variables(defined_variables, used_variables);
+
+            List<String> variables =  new ArrayList<>();
+            variables.addAll(defined_variables);
+            variables.addAll(used_variables);
+
 
             for (String variable : variables) {
                 if (Variable_to_BasicBlock.containsKey(variable)) { // if there's a previous occurance of this variable, add a link to it in the DDG
