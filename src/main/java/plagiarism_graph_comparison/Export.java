@@ -107,6 +107,21 @@ public class Export {
         export.exportGraph(ddg.node_graph, f);
     }
 
+    public static void exporter(PDG pdg ,int counter) throws IOException {
+        File export_file = new File("graphs\\PDGs\\file" + counter + ".graphml");
+
+        export_file.getParentFile().mkdirs();
+        export_file.createNewFile();
+
+        FileWriter f = new FileWriter(export_file);
+            
+        GraphMLExporter<BasicBlock, DependencyEdge> export = new GraphMLExporter<>(v -> v.toString());
+        export.setExportEdgeLabels(true);
+        export.setExportVertexLabels(true);
+
+        export.exportGraph(pdg.node_graph, f);
+    }
+
     public static void exporter(EdgeReversedGraph<BasicBlock, DefaultEdge> node_graph, int counter) throws IOException {
         File export_file = new File("graphs\\Reversed_CFGs\\file" + counter + ".dot");
 

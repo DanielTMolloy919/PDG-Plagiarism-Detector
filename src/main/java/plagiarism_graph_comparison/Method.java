@@ -17,6 +17,8 @@ public class Method {
 
     DDG ddg; // method's data dependency graph
 
+    PDG pdg; // method's program dependency graph
+
     public Method(MethodDeclaration method_node) throws IOException, StatementNotFoundException {
         this.method_node = method_node;
 
@@ -30,11 +32,9 @@ public class Method {
 
         Export.exporter(cfg, counter);
 
-        // this.cdg = new CDG(cfg, counter);
-
         this.ddg = new DDG(statement_graph, counter, cfg);
 
-        // this.pdg = new PDG(method_node, counter);
+        this.pdg = new PDG(ddg, counter);
 
         counter++;
     }
