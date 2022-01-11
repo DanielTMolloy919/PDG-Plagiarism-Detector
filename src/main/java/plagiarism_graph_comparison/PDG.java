@@ -2,6 +2,7 @@ package plagiarism_graph_comparison;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -37,9 +38,14 @@ public class PDG {
 
         bb_ipdom = new LinkedHashMap<>(); // contains the immediate post dominator for each statement 
         
-        for (BasicBlock bb : basic_blocks) {
+        // get the immediate post dominator for every statement but the last
+        for (int i = 0; i < basic_blocks.size() - 1; i++) {
+            BasicBlock bb = basic_blocks.get(i);
             bb_ipdom.put(bb, get_ipdom(bb));
         }
+
+        // manually make the last statement's postdominator the 'END' node
+        bb_ipdom.put(basic_blocks.get(basic_blocks.size() -1), Statement_id_to_BasicBlock.get("END"));
 
         for (int i = 0; i < basic_blocks.size(); i++) {
             for (int j = i + 1; j <= statements.size(); j++) {
