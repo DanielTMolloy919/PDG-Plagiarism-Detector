@@ -11,6 +11,7 @@ import com.github.javaparser.ast.stmt.Statement;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.EdgeReversedGraph;
 import org.jgrapht.nio.dot.DOTExporter;
+import org.jgrapht.nio.graphml.GraphMLExporter;
 
 public class Export {
     public static void exporter(MethodDeclaration method_node,int counter) throws IOException {
@@ -92,14 +93,16 @@ public class Export {
     // }
 
     public static void exporter(DDG ddg ,int counter) throws IOException {
-        File export_file = new File("graphs\\DDGs\\file" + counter + ".dot");
+        File export_file = new File("graphs\\DDGs\\file" + counter + ".graphml");
 
         export_file.getParentFile().mkdirs();
         export_file.createNewFile();
 
         FileWriter f = new FileWriter(export_file);
             
-        DOTExporter<BasicBlock, DefaultEdge> export = new DOTExporter<>(v -> v.toString());
+        GraphMLExporter<BasicBlock, DependencyEdge> export = new GraphMLExporter<>(v -> v.toString());
+        export.setExportEdgeLabels(true);
+        export.setExportVertexLabels(true);
 
         export.exportGraph(ddg.node_graph, f);
     }
@@ -111,7 +114,7 @@ public class Export {
         export_file.createNewFile();
 
         FileWriter f = new FileWriter(export_file);
-            
+
         DOTExporter<BasicBlock, DefaultEdge> export = new DOTExporter<>(v -> v.toString());
 
         export.exportGraph(node_graph, f);

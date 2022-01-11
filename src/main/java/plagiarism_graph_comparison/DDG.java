@@ -28,7 +28,7 @@ public class DDG {
     CFG cfg;
     EdgeReversedGraph<BasicBlock,DefaultEdge> reversed_cfg;
 
-    Graph<BasicBlock, DefaultEdge> node_graph; // The method's data dependence graph
+    Graph<BasicBlock, DependencyEdge> node_graph; // The method's data dependence graph
 
     List<UniqueExpression> expressions;
     LinkedHashMap<UniqueExpression, BasicBlock> Expression_to_BasicBlock;
@@ -41,7 +41,7 @@ public class DDG {
         this.Statement_id_to_BasicBlock = blocks.Statement_id_to_BasicBlock;
         this.counter = counter;
 
-        node_graph = new DefaultDirectedGraph<>(DefaultEdge.class);
+        node_graph = new DefaultDirectedGraph<>(DependencyEdge.class);
 
         this.cfg = cfg;
 
@@ -169,7 +169,7 @@ public class DDG {
             if (pre_bb.defined_variables != null) {
                 if (pre_bb.defined_variables.contains(variable)) {
                     // link it in the dd
-                    node_graph.addEdge(post_bb, pre_bb);
+                    node_graph.addEdge(post_bb, pre_bb, new DependencyEdge("DD"));
                     // return since we've found another definition
                     return;
                 }
@@ -179,7 +179,7 @@ public class DDG {
                 if (pre_bb.used_variables.contains(variable)) {
                     // if current variable is a defined variable link it, otherwise skip, since there's no connection between two variable usages
                     if (defined_variable) {
-                        node_graph.addEdge(post_bb, pre_bb);
+                        node_graph.addEdge(post_bb, pre_bb, new DependencyEdge("DD"));
                         return;
                     }
                 }
