@@ -23,6 +23,9 @@ public class PDG {
 
     LinkedHashMap<BasicBlock, BasicBlock> bb_ipdom;
 
+    AllDirectedPaths<BasicBlock, DefaultEdge> all_directed_paths;
+    List<GraphPath<BasicBlock, DefaultEdge>> pdom_paths;
+
     public PDG(DDG ddg, int counter) throws IOException {
         this.statements = ddg.statements;
         this.basic_blocks = ddg.basic_blocks;
@@ -73,34 +76,66 @@ public class PDG {
         return true;
     }
 
+    // Finds and returns a given node's immediate post dominator
     private BasicBlock get_ipdom(BasicBlock bb) {
 
         int id = bb.get_id();
         List<BasicBlock> candidates = new ArrayList<>();
 
-        // for each 
-        for (int i = id + 1; i <= statements.size(); i++) {
-            if (is_pdom(bb, basic_blocks.get(i))) {
-                candidates.add(bb);
+        // get all the cfg paths from bb to the end
+        all_directed_paths = new AllDirectedPaths<>(cfg.node_graph);
+        pdom_paths = all_directed_paths.getAllPaths(bb, Statement_id_to_BasicBlock.get("END"), true, 100);
+
+        // for each node after bb, check if it could be the immediate post dominator 
+        for (int i = id + 1; i < statements.size(); i++) {
+            if (is_pdom(bb, basic_blocks.get(i), pdom_paths)) {
+                candidates.add(basic_blocks.get(i));
             }
         }
-        return bb;
+        if (candidates.size() == 1) { // if there's only one candidate, it must be the immediate postdominator
+            return candidates.get(0);
+        };
 
+        List<BasicBlock> remaining_candidates = new ArrayList<>();
 
+        remaining_candidates.addAll(candidates);
+
+        for (BasicBlock candidate : candidates) {// for each potential immediate post dominator
+            List<BasicBlock> other_candidates = new ArrayList<>();
+            other_candidates.addAll(candidates);
+            other_candidates.remove(candidate);
+
+            pdom_paths = all_directed_paths.getAllPaths(candidate, Statement_id_to_BasicBlock.get("END"), true, 100);
+            
+            // for all the other potential immediate postdominators besides 'candidate'
+            for (BasicBlock other_candidate : other_candidates) {
+                // if this 'other candidate' postdominates 'candidate', then 'other candidate' can't be the immediate postdominator of bb
+                if (is_pdom(candidate, other_candidate, pdom_paths)) {
+                    remaining_candidates.remove(other_candidate);
+                }
+            }
+            // if (other_candidates.stream().anyMatch(other_candidate -> is_pdom(candidate, other_candidate,pdom_paths))) {
+            //     remaining_candidates.remove(candidate);
+            // }
+        }
+
+        // There should only be one immediate post dominator - if this isn't the case something has gone wrong
+        if (remaining_candidates.size() != 1)  {
+            String throw_string = "Candidate " + id + " has no single postdominator";
+            System.out.println(throw_string);
+        }
+
+        return remaining_candidates.get(0);
     }
 
-    private boolean is_pdom(BasicBlock dominated_bb, BasicBlock dominator_bb) {
-
-        AllDirectedPaths<BasicBlock, DefaultEdge> all_directed_paths = new AllDirectedPaths<>(cfg.node_graph);
-
-        List<GraphPath<BasicBlock, DefaultEdge>> pdom_paths = all_directed_paths.getAllPaths(dominated_bb, Statement_id_to_BasicBlock.get("END"), true, 100);
+    private boolean is_pdom(BasicBlock dominated_bb, BasicBlock dominator_bb, List<GraphPath<BasicBlock, DefaultEdge>> pdom_paths) {
 
         if (pdom_paths.size() > 100) { // Warns the user of unusual behaviour
             System.out.println("Warning: greater than 100 potential postdominance paths found for Method " + counter + " Statement " + dominated_bb.get_id());
         }
 
         for (GraphPath<BasicBlock, DefaultEdge> graphPath : pdom_paths) {// loop through each path
-            if (!graphPath.getVertexList().stream().anyMatch(vertex -> vertex.equals(dominator_bb))) { // unless dominator_id shows up in every single postdominance path, return false. If there's a single path that doesn't contain dominator_id, dominator_id cannot postdominate dominated_id
+            if (!graphPath.getVertexList().stream().anyMatch(vertex -> vertex.equals(dominator_bb))) { // unless dominator_bb shows up in every single postdominance path, return false. If there's a single path that doesn't contain dominator_bb, dominator_bb cannot postdominate dominated_bb
                 return false;
             }
         }
