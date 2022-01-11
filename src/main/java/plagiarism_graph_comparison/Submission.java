@@ -7,7 +7,6 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.utils.SourceRoot;
 
-import plagiarism_graph_comparison.CDG.NoSinglePostdominatorException;
 import plagiarism_graph_comparison.CFG.StatementNotFoundException;
 
 
@@ -17,7 +16,7 @@ public class Submission {
     ArrayList<Method> method_objects;
     int counter;
 
-    public Submission(SourceRoot root_dir) throws IOException, StatementNotFoundException, NoSinglePostdominatorException{
+    public Submission(SourceRoot root_dir) throws IOException, StatementNotFoundException  {
 
         SourceRoot source = root_dir;
         
