@@ -24,6 +24,7 @@ public class DDG {
     List<BasicBlock> basic_blocks;
     LinkedHashMap<String, BasicBlock> Statement_id_to_BasicBlock;
     int counter;
+    static int count = 0;
 
     CFG cfg;
     EdgeReversedGraph<BasicBlock,DefaultEdge> reversed_cfg;
@@ -139,11 +140,21 @@ public class DDG {
         AllDirectedPaths<BasicBlock, DefaultEdge> all_directed_paths = new AllDirectedPaths<>(reversed_cfg);
 
         List<GraphPath<BasicBlock, DefaultEdge>> paths = all_directed_paths.getAllPaths(post_bb, Statement_id_to_BasicBlock.get("START"), true, 100);
+
+        // count++;
+        // System.out.println(count);
+
+        // if no paths exist, there can't be a link
+        if (paths.size() == 0) {
+            return;
+        }
+
         GraphPath<BasicBlock, DefaultEdge> path = paths.get(0);
 
         // if we've got defined_variables, link up previous instances
         if (defined_variables.size() != 0) {
             for (String variable : defined_variables) {
+                
                 find_previous_vars(path, post_bb ,variable, true);
             }
         }

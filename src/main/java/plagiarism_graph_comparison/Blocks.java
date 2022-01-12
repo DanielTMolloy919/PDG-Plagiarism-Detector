@@ -15,9 +15,14 @@ import com.github.javaparser.ast.stmt.Statement;
 public class Blocks {
     List<Statement> statements;
     List<BasicBlock> blocks;
+    MethodDeclaration method_node;
+
+    static int count = 0; // for debugging
     
     LinkedHashMap<String, BasicBlock> Statement_id_to_BasicBlock;
     public Blocks(MethodDeclaration method_node) {
+        this.method_node = method_node;
+
         statements = method_node.findAll(Statement.class); // load all the statements
 
         blocks = new ArrayList<>();
@@ -27,6 +32,9 @@ public class Blocks {
 
         // extract all the variables defined in the method declaration
         method_parameters.addAll(method_node.getParameters().stream().map(x -> x.getName().asString()).collect(Collectors.toList()));
+
+        // count++;
+        // System.out.println(count);
 
         BasicBlock bb = new BasicBlock(statements.get(0), 0);
         blocks.add(bb);

@@ -33,6 +33,8 @@ public class CFG {
     private Statement original_statement;
     private int test_id;
 
+    static int count = 0; // for debugging
+
 
     public CFG(Blocks blocks, int counter) throws IOException, StatementNotFoundException {
 
@@ -40,6 +42,9 @@ public class CFG {
         this.basic_blocks = blocks.blocks;
         this.Statement_id_to_BasicBlock = blocks.Statement_id_to_BasicBlock;
         this.counter = counter;
+
+        // count++;
+        // System.out.println(count);
 
         node_graph = new DefaultDirectedGraph<>(DefaultEdge.class);
 
@@ -114,6 +119,7 @@ public class CFG {
             // if its a 'for' or `do-while` statement
             else if (statement.isForStmt() || statement.isDoStmt() || statement.isForEachStmt()) {
                 link(get_last_child(current_id), current_id);
+                link(current_id, get_subsequent_sibling(current_id));
             }
 
             // if its a 'while' statement

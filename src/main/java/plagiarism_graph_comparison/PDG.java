@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 
+import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.stmt.Statement;
 
 import org.jgrapht.Graph;
@@ -18,6 +19,8 @@ public class PDG {
     List<BasicBlock> basic_blocks;
     LinkedHashMap<String, BasicBlock> Statement_id_to_BasicBlock;
     int counter;
+
+    static int count = 0; // for debugging
 
     CFG cfg;
     Graph<BasicBlock, DependencyEdge> node_graph; // The method's data dependence graph
@@ -47,8 +50,12 @@ public class PDG {
         // manually make the last statement's postdominator the 'END' node
         bb_ipdom.put(basic_blocks.get(basic_blocks.size() -1), Statement_id_to_BasicBlock.get("END"));
 
+        // for each statement 'i'
         for (int i = 0; i < basic_blocks.size(); i++) {
-            for (int j = i + 1; j <= statements.size(); j++) {
+            // for each node after statement 'i'
+            for (int j = i + 1; j < basic_blocks.size(); j++) {
+
+                // if a connection between 'i' and 'j' qualifies as a control dependency, link it up
                 if (!is_connection_eliminated(basic_blocks.get(i), basic_blocks.get(j))) {
                     node_graph.addEdge(basic_blocks.get(i), basic_blocks.get(j), new DependencyEdge("CD"));
                     Export.exporter(this, counter);
@@ -59,8 +66,7 @@ public class PDG {
 
     private boolean is_connection_eliminated(BasicBlock start_bb, BasicBlock end_bb) {
 
-        AllDirectedPaths<BasicBlock, DefaultEdge> all_directed_paths = new AllDirectedPaths<>(cfg.node_graph);
-
+        // get all the paths between the two nodes
         List<GraphPath<BasicBlock, DefaultEdge>> potential_paths = all_directed_paths.getAllPaths(start_bb, end_bb, true, 100);
 
         int true_connection_count = 0;
@@ -69,21 +75,29 @@ public class PDG {
             System.out.println("Warning: greater than 100 potential CDG paths found between Node " + start_bb.get_id() + " and Node " + end_bb.get_id());
         }
         
+        // for each path
         for (GraphPath<BasicBlock,DefaultEdge> graphPath : potential_paths) {
+
+            // for the vertexes on this path, if one of the vertexes is start_bb's immediate postdominator, the path is eliminated
             if (!graphPath.getVertexList().stream().anyMatch(vertex -> vertex == bb_ipdom.get(start_bb))) {
                 true_connection_count++;
             }
         }
 
+        // if there exists at least one path that doesn't contain the ipdom, this is a control dependence. Therefore *don't* eliminate the connection
         if (true_connection_count > 0) {
             return false;
         }
 
+        // otherwise if all paths contain the ipdom, eliminate the connection
         return true;
     }
 
     // Finds and returns a given node's immediate post dominator
     private BasicBlock get_ipdom(BasicBlock bb) {
+
+        count++;
+        System.out.println(count);
 
         int id = bb.get_id();
         List<BasicBlock> candidates = new ArrayList<>();
@@ -92,10 +106,14 @@ public class PDG {
         all_directed_paths = new AllDirectedPaths<>(cfg.node_graph);
         pdom_paths = all_directed_paths.getAllPaths(bb, Statement_id_to_BasicBlock.get("END"), true, 100);
 
+        List<BasicBlock> cfg_bbs = new ArrayList<>();
+        cfg_bbs.addAll(basic_blocks);
+        cfg_bbs.add(Statement_id_to_BasicBlock.get("END"));
+
         // for each node after bb, check if it could be the immediate post dominator 
-        for (int i = id + 1; i < statements.size(); i++) {
-            if (is_pdom(bb, basic_blocks.get(i), pdom_paths)) {
-                candidates.add(basic_blocks.get(i));
+        for (int i = id + 1; i < cfg_bbs.size(); i++) {
+            if (is_pdom(bb, cfg_bbs.get(i), pdom_paths)) {
+                candidates.add(cfg_bbs.get(i));
             }
         }
         if (candidates.size() == 1) { // if there's only one candidate, it must be the immediate postdominator
