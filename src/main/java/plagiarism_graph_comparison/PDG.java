@@ -96,8 +96,8 @@ public class PDG {
     // Finds and returns a given node's immediate post dominator
     private BasicBlock get_ipdom(BasicBlock bb) {
 
-        count++;
-        System.out.println(count);
+        // count++;
+        // System.out.println(count);
 
         int id = bb.get_id();
         List<BasicBlock> candidates = new ArrayList<>();

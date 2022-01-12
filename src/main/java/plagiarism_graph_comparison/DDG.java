@@ -8,9 +8,9 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.stmt.Statement;
-import com.google.common.util.concurrent.Service.State;
 
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
@@ -41,6 +41,9 @@ public class DDG {
         this.basic_blocks = blocks.blocks;
         this.Statement_id_to_BasicBlock = blocks.Statement_id_to_BasicBlock;
         this.counter = counter;
+        
+        count++;
+        System.out.println(count);
 
         node_graph = new DefaultDirectedGraph<>(DependencyEdge.class);
 
@@ -80,7 +83,28 @@ public class DDG {
                 expression = new UniqueExpression(statement.asWhileStmt().getCondition());
                 ExpressionImporter(expression, i);
             }
-        }
+
+            else if (statement.isForEachStmt()) {
+                // expression = new UniqueExpression(statement.asForEachStmt().getIterable());
+                expression = new UniqueExpression(statement.asForEachStmt().getIterable());
+                ExpressionImporter(expression, i);
+                expression = new UniqueExpression(statement.asForEachStmt().getVariable());
+                ExpressionImporter(expression, i);
+            }
+
+            else if (statement.isForStmt()) {
+                List<Expression> expressions = statement.asForStmt().getInitialization();
+                for (Expression for_expression : expressions) {
+                    UniqueExpression unique_expression = new UniqueExpression(for_expression);
+                    ExpressionImporter(unique_expression, i);
+                }
+                expressions = statement.asForStmt().getUpdate();
+                for (Expression for_expression : expressions) {
+                    UniqueExpression unique_expression = new UniqueExpression(for_expression);
+                    ExpressionImporter(unique_expression, i);
+                }
+            }
+         }
 
         // extract the variables out of each expression
         for (UniqueExpression uexpression : expressions) {
@@ -141,8 +165,6 @@ public class DDG {
 
         List<GraphPath<BasicBlock, DefaultEdge>> paths = all_directed_paths.getAllPaths(post_bb, Statement_id_to_BasicBlock.get("START"), true, 100);
 
-        // count++;
-        // System.out.println(count);
 
         // if no paths exist, there can't be a link
         if (paths.size() == 0) {
