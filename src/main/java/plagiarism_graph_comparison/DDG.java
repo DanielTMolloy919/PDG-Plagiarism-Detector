@@ -127,6 +127,10 @@ public class DDG {
                 used_variables.addAll(expression.asMethodCallExpr().getArguments().stream().map(x -> x.toString()).collect(Collectors.toList()));
             }
 
+            else if (expression.isFieldAccessExpr()) { 
+                used_variables.add(expression.asFieldAccessExpr().getNameAsString());
+            }
+
             //load corresponding basic block with variable data
             Expression_to_BasicBlock.get(uexpression).set_variables(defined_variables, used_variables);
 
