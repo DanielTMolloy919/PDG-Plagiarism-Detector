@@ -26,8 +26,12 @@ public class BasicBlock {
     public BasicBlock(Statement statement, int id) {
         this.statement = statement;
         this.id = id;
+
         is_start = false;
         is_end = false;
+        
+        defined_variables = new ArrayList<String>();
+        used_variables = new ArrayList<String>();
     }
 
     public BasicBlock(boolean start) {
@@ -50,9 +54,19 @@ public class BasicBlock {
         return this.id;
     }
 
-    public void set_variables(List<String> defined_variables, List<String> used_variables) {
-        this.defined_variables = defined_variables;
-        this.used_variables = used_variables;
+    // adds new variables to relevant lists if they aren't already on there
+    public void add_variables(List<String> defined_variables, List<String> used_variables) {
+        for (String variable : defined_variables) {
+            if (!this.defined_variables.contains(variable)) {
+                this.defined_variables.add(variable);
+            }
+        }
+
+        for (String variable : used_variables) {
+            if (!this.used_variables.contains(variable)) {
+                this.used_variables.add(variable);
+            }
+        }
     }
 
     public void set_variables(List<String> defined_variables) {

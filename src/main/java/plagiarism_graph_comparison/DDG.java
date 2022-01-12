@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -65,49 +66,52 @@ public class DDG {
             UniqueExpression expression;
 
             if (statement.isExpressionStmt()) {
-                expression = new UniqueExpression(statement.asExpressionStmt().getExpression());
-                ExpressionImporter(expression, i);
+                expression = new UniqueExpression(statement.asExpressionStmt().getExpression(),i);
+                expression_importer(expression, i);
             }
 
             else if (statement.isIfStmt()) {
-                expression = new UniqueExpression(statement.asIfStmt().getCondition());
-                ExpressionImporter(expression, i);
+                expression = new UniqueExpression(statement.asIfStmt().getCondition(),i);
+                expression_importer(expression, i);
             }
 
             else if (statement.isDoStmt()) {
-                expression = new UniqueExpression(statement.asDoStmt().getCondition());
-                ExpressionImporter(expression, i);
+                expression = new UniqueExpression(statement.asDoStmt().getCondition(),i);
+                expression_importer(expression, i);
             }
 
             else if (statement.isWhileStmt()) {
-                expression = new UniqueExpression(statement.asWhileStmt().getCondition());
-                ExpressionImporter(expression, i);
+                expression = new UniqueExpression(statement.asWhileStmt().getCondition(),i);
+                expression_importer(expression, i);
             }
 
             else if (statement.isForEachStmt()) {
                 // expression = new UniqueExpression(statement.asForEachStmt().getIterable());
-                expression = new UniqueExpression(statement.asForEachStmt().getIterable());
-                ExpressionImporter(expression, i);
-                expression = new UniqueExpression(statement.asForEachStmt().getVariable());
-                ExpressionImporter(expression, i);
+                expression = new UniqueExpression(statement.asForEachStmt().getIterable(),i);
+                expression_importer(expression, i);
+                expression = new UniqueExpression(statement.asForEachStmt().getVariable(),i);
+                expression_importer(expression, i);
             }
 
             else if (statement.isForStmt()) {
                 List<Expression> expressions = statement.asForStmt().getInitialization();
                 for (Expression for_expression : expressions) {
-                    UniqueExpression unique_expression = new UniqueExpression(for_expression);
-                    ExpressionImporter(unique_expression, i);
+                    UniqueExpression unique_expression = new UniqueExpression(for_expression,i);
+                    expression_importer(unique_expression, i);
                 }
                 expressions = statement.asForStmt().getUpdate();
                 for (Expression for_expression : expressions) {
-                    UniqueExpression unique_expression = new UniqueExpression(for_expression);
-                    ExpressionImporter(unique_expression, i);
+                    UniqueExpression unique_expression = new UniqueExpression(for_expression,i);
+                    expression_importer(unique_expression, i);
                 }
             }
          }
 
         // extract the variables out of each expression
-        for (UniqueExpression uexpression : expressions) {
+        // ListIterator is used, since subexpressions need to be live added to the queue 
+        for (int i = 0; i < expressions.size(); i++) {
+        // for (ListIterator<UniqueExpression> iter = expressions.listIterator(); iter.hasNext();) {
+            UniqueExpression uexpression = expressions.get(i);
             Expression expression = uexpression.expression;
 
             List<String> defined_variables = new ArrayList<>();
@@ -118,37 +122,104 @@ public class DDG {
             }
             
             else if (expression.isAssignExpr()) {
-                // get the two variables comprising an assignment expression
-                defined_variables.add(expression.asAssignExpr().getTarget().toString());
-                used_variables.add(expression.asAssignExpr().getValue().toString());
+                // get the two expression comprising an assignment and add to the queue
+                add_to_queue(uexpression, expression.asAssignExpr().getValue(),false);
+                add_to_queue(uexpression, expression.asAssignExpr().getTarget(),true);
             }
 
             else if (expression.isMethodCallExpr()) {
-                used_variables.addAll(expression.asMethodCallExpr().getArguments().stream().map(x -> x.toString()).collect(Collectors.toList()));
+                List<Expression> mc_expressions = expression.asMethodCallExpr().getArguments();
+                for (Expression mc_expression : mc_expressions) {
+                    add_to_queue(uexpression, mc_expression,false);
+                }
+
+                if (expression.asMethodCallExpr().getScope().isPresent()) {
+                    Expression scope = expression.asMethodCallExpr().getScope().get();
+                    add_to_queue(uexpression, scope,false);
+                }
+                // used_variables.addAll(expression.asMethodCallExpr().getArguments().stream().map(x -> x.toString()).collect(Collectors.toList()));
+
+            }
+
+            else if (expression.isObjectCreationExpr()) {
+                List<Expression> oc_expressions = expression.asObjectCreationExpr().getArguments();
+                for (Expression oc_expression : oc_expressions) {
+                    add_to_queue(uexpression, oc_expression,false);
+                }
+
+                if (expression.asObjectCreationExpr().getScope().isPresent()) {
+                    Expression scope = expression.asMethodCallExpr().getScope().get();
+                    add_to_queue(uexpression, scope,false);
+                }
+            }
+
+            else if (expression.isBinaryExpr()) {
+                add_to_queue(uexpression, expression.asBinaryExpr().getLeft());
+                add_to_queue(uexpression, expression.asBinaryExpr().getRight());
+            }
+
+            else if (expression.isInstanceOfExpr()) {
+                add_to_queue(uexpression, expression.asInstanceOfExpr().getExpression(),false);
             }
 
             else if (expression.isFieldAccessExpr()) { 
                 used_variables.add(expression.asFieldAccessExpr().getNameAsString());
             }
 
+            else if (expression.isNameExpr()) {
+                if (uexpression.is_defined) {
+                    defined_variables.add(expression.asNameExpr().getNameAsString());
+                }
+                else {
+                    used_variables.add(expression.asNameExpr().getNameAsString());
+                }
+            }
+
             //load corresponding basic block with variable data
-            Expression_to_BasicBlock.get(uexpression).set_variables(defined_variables, used_variables);
-
-            reversed_cfg = new EdgeReversedGraph<BasicBlock, DefaultEdge>(cfg.node_graph);
-
-            Export.exporter(reversed_cfg, counter);
+            Expression_to_BasicBlock.get(uexpression).add_variables(defined_variables, used_variables);
         }
+
+        reversed_cfg = new EdgeReversedGraph<BasicBlock, DefaultEdge>(cfg.node_graph);
+
+        // Export.exporter(reversed_cfg, counter);
 
         for (int j = 0; j < expressions.size(); j++) {
             link_statement(Expression_to_BasicBlock.get(expressions.get(j)));
         }
 
         // if (expressions.size() >= 10) {
-        Export.exporter(this, counter);
+        // Export.exporter(this, counter);
         // }
     }
 
-    public void ExpressionImporter(UniqueExpression expression, int i) {
+    // A small function that adds an expression thats been extracted from another expression to the iterable
+    // This way the core variables are extracted
+    public void add_to_queue(UniqueExpression parent_expression, Expression sub_expression) {
+        UniqueExpression unique_expression = new UniqueExpression(sub_expression, parent_expression.id);
+        expressions.add(unique_expression);
+        Expression_to_BasicBlock.put(unique_expression, Statement_id_to_BasicBlock.get(Integer.toString(parent_expression.id)));
+        // if parent expression contains used/defined data, copy this over to the subexpression
+        if (parent_expression.is_defined || parent_expression.is_used) {
+            unique_expression.metadata(parent_expression.is_defined);
+        }
+    }
+
+    // Additional variable 'is_defined' remembers whether the expression is being used or defined. Useful for ','nameExpr' and similar
+    public void add_to_queue(UniqueExpression parent_expression, Expression sub_expression, boolean is_defined) {
+        UniqueExpression unique_expression = new UniqueExpression(sub_expression, parent_expression.id);
+        expressions.add(unique_expression);
+        Expression_to_BasicBlock.put(unique_expression, Statement_id_to_BasicBlock.get(Integer.toString(parent_expression.id)));
+
+        // if parent expression contains used/defined data, copy this over to the subexpression
+        if (parent_expression.is_defined || parent_expression.is_used) {
+            unique_expression.metadata(parent_expression.is_defined);
+        }
+        else {
+            unique_expression.metadata(is_defined);
+        }
+    }
+
+    public void expression_importer(UniqueExpression expression, int i) {
         expressions.add(expression);
         Expression_to_BasicBlock.put(expression, Statement_id_to_BasicBlock.get(Integer.toString(i))); // makes sure the expression's associated statement can be found later on
     }
@@ -228,10 +299,24 @@ public class DDG {
 // A small class to make every expression unique (i.e. differentiate expressions with the same hashcode) for use in LinkedHashMaps
 class UniqueExpression {
     Expression expression;
-    String id;
+    String uid;
+    int id;
+    boolean is_defined;
+    boolean is_used;
 
-    public UniqueExpression(Expression expression) {
+    public UniqueExpression(Expression expression, int id) {
         this.expression = expression;
-        id = UUID.randomUUID().toString();
+        this.id = id;
+        uid = UUID.randomUUID().toString();
+    }
+
+    public void metadata(boolean is_defined) {
+        if (is_defined) {
+            this.is_defined = true;
+        }
+
+        else {
+            this.is_used = true;
+        }
     }
 }

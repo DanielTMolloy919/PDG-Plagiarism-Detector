@@ -34,7 +34,11 @@ public class Method {
 
         this.ddg = new DDG(statement_graph, counter, cfg);
 
+        Export.exporter(ddg, counter);
+
         this.pdg = new PDG(ddg, counter);
+
+        Export.exporter(pdg, counter);
 
         counter++;
     }

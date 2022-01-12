@@ -52,7 +52,7 @@ public class CFG {
             node_graph.addVertex(basicBlock); // load all the statement nodes
         }
 
-        Export.exporter(statements, counter);
+        // Export.exporter(statements, counter);
 
         statement_blacklist = new ArrayList<Integer>();
 
@@ -68,7 +68,7 @@ public class CFG {
 
         if (statements.size() == 0) {
             link("START", "END");
-            Export.exporter(this,counter);
+            // Export.exporter(this,counter);
             return;
         }
 
@@ -76,7 +76,7 @@ public class CFG {
             link("START", 0);
             link(0, "END");
 
-            Export.exporter(this,counter);
+            // Export.exporter(this,counter);
             return;
         }
 
@@ -189,7 +189,7 @@ public class CFG {
                 link(current_id, current_id + 1);
             }
 
-            Export.exporter(this,counter);
+            // Export.exporter(this,counter);
 
             current_id++;
         }
@@ -237,8 +237,6 @@ public class CFG {
     private void link_meta(String start_id, String end_id){
         node_graph.addEdge(Statement_id_to_BasicBlock.get(start_id), Statement_id_to_BasicBlock.get(end_id));
     }
-
-
 
     private int statement_to_id(Statement statement) throws StatementNotFoundException {
         OptionalInt statement_position = IntStream.range(0, statements.size())

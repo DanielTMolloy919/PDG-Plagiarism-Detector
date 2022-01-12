@@ -39,6 +39,9 @@ public class PDG {
         this.cfg = ddg.cfg;
         this.node_graph = ddg.node_graph;
 
+        // count++;
+        // System.out.println(count);
+
         bb_ipdom = new LinkedHashMap<>(); // contains the immediate post dominator for each statement 
         
         // get the immediate post dominator for every statement but the last
@@ -58,7 +61,7 @@ public class PDG {
                 // if a connection between 'i' and 'j' qualifies as a control dependency, link it up
                 if (!is_connection_eliminated(basic_blocks.get(i), basic_blocks.get(j))) {
                     node_graph.addEdge(basic_blocks.get(i), basic_blocks.get(j), new DependencyEdge("CD"));
-                    Export.exporter(this, counter);
+                    // Export.exporter(this, counter);
                 }
             }
         }
@@ -95,9 +98,6 @@ public class PDG {
 
     // Finds and returns a given node's immediate post dominator
     private BasicBlock get_ipdom(BasicBlock bb) {
-
-        // count++;
-        // System.out.println(count);
 
         int id = bb.get_id();
         List<BasicBlock> candidates = new ArrayList<>();
