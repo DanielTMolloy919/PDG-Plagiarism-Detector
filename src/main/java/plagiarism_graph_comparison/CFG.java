@@ -43,8 +43,8 @@ public class CFG {
         this.Statement_id_to_BasicBlock = blocks.Statement_id_to_BasicBlock;
         this.counter = counter;
 
-        count++;
-        System.out.println(count);
+        // count++;
+        // System.out.println(count);
 
         node_graph = new DefaultDirectedGraph<>(DefaultEdge.class);
 

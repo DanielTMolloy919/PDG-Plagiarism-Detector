@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Set;
 
 import com.github.javaparser.ast.stmt.Statement;
 
@@ -27,8 +28,11 @@ public class PDG {
     Graph<BasicBlock, DependencyEdge> cdg; // The method's control dependence subgraph, for demonstration
 
     LinkedHashMap<BasicBlock, BasicBlock> bb_ipdom;
+    LinkedHashMap<BasicBlock, List<BasicBlock>> edge_map;
 
     AllDirectedPaths<BasicBlock, DefaultEdge> all_directed_paths;
+    AllDirectedPaths<BasicBlock,DependencyEdge> all_pdg_paths;
+
     List<GraphPath<BasicBlock, DefaultEdge>> pdom_paths;
 
     public PDG(DDG ddg, int counter) throws IOException {
@@ -40,10 +44,11 @@ public class PDG {
         this.cfg = ddg.cfg;
         this.node_graph = ddg.node_graph;
 
-        // count++;
-        // System.out.println(count);
+        count++;
+        System.out.println(count);
 
         bb_ipdom = new LinkedHashMap<>(); // contains the immediate post dominator for each statement
+        edge_map = new LinkedHashMap<>();
 
         cdg = new DefaultDirectedGraph<>(DependencyEdge.class);
 
@@ -56,6 +61,7 @@ public class PDG {
             BasicBlock bb = basic_blocks.get(i);
             bb_ipdom.put(bb, get_ipdom(bb));
         }
+        
 
         // manually make the last statement's postdominator the 'END' node
         bb_ipdom.put(basic_blocks.get(basic_blocks.size() -1), Statement_id_to_BasicBlock.get("END"));
@@ -67,11 +73,62 @@ public class PDG {
 
                 // if a connection between 'i' and 'j' qualifies as a control dependency, link it up
                 if (!is_connection_eliminated(basic_blocks.get(i), basic_blocks.get(j))) {
-                    node_graph.addEdge(basic_blocks.get(i), basic_blocks.get(j), new DependencyEdge("CD"));
-                    // Export.exporter(this, counter);
-                    cdg.addEdge(basic_blocks.get(i), basic_blocks.get(j), new DependencyEdge("CD"));
+                    add_control_edge(basic_blocks.get(i), basic_blocks.get(j));
                 }
             }
+        }
+
+        Export.exporter(cdg, counter,"RAW");
+
+        all_pdg_paths = new AllDirectedPaths<>(node_graph);
+
+        // remove duplicate edges
+        for (int i = 0; i <basic_blocks.size(); i++) {
+            BasicBlock vertex = basic_blocks.get(i);
+            if (!edge_map.containsKey(vertex)) {
+                continue;
+            }
+            List<BasicBlock> incoming_list = edge_map.get(vertex);
+            if (incoming_list.size() > 1) {
+                for (BasicBlock source : incoming_list) {
+                    List<GraphPath<BasicBlock, DependencyEdge>> potential_paths = all_pdg_paths.getAllPaths(source, basic_blocks.get(i), true, 100);
+                    if (potential_paths.size() > 1) {
+                        node_graph.removeEdge(source, basic_blocks.get(i));
+                        cdg.removeEdge(source, basic_blocks.get(i));
+                    }
+                }
+            }
+        }
+
+        // link up direct children
+
+        List<BasicBlock> direct_children = new ArrayList<>();
+
+        // for each node, if there's no incoming edges and it isn't node 0, it must be a direct child
+        for (BasicBlock bb : basic_blocks) {
+            if (cdg.inDegreeOf(bb) == 0 && bb.id != 0) {
+                direct_children.add(bb);
+            } 
+        }
+
+        // for each child, link to the start node
+        for (BasicBlock child : direct_children) {
+            node_graph.addEdge(Statement_id_to_BasicBlock.get("0"), child, new DependencyEdge("CD"));
+            cdg.addEdge(Statement_id_to_BasicBlock.get("0"), child, new DependencyEdge("CD"));
+        }
+    }
+
+    private void add_control_edge(BasicBlock source, BasicBlock destination) {
+        node_graph.addEdge(source, destination, new DependencyEdge("CD"));
+        cdg.addEdge(source, destination, new DependencyEdge("CD"));
+
+        if (edge_map.containsKey(destination)) {
+            edge_map.get(destination).add(source);
+        }
+        else {
+            List<BasicBlock> incoming_list = new ArrayList<>();
+            incoming_list.add(source);
+            edge_map.put(destination, incoming_list);
         }
     }
 

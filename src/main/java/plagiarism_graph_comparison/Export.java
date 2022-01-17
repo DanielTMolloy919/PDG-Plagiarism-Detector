@@ -89,6 +89,20 @@ public class Export {
         export.exportGraph(cdg, f);
     }
 
+    public static void exporter(Graph<BasicBlock, DependencyEdge> cdg,int counter, String raw) throws IOException {
+
+        File export_file = new File("graphs\\Raw-CDGs\\file" + counter + ".dot");
+
+        export_file.getParentFile().mkdirs();
+        export_file.createNewFile();
+
+        FileWriter f = new FileWriter(export_file);
+            
+        DOTExporter<BasicBlock, DependencyEdge> export = new DOTExporter<>(v -> v.toString());
+
+        export.exportGraph(cdg, f);
+    }
+
     public static void exporter(DDG ddg,int counter) throws IOException {
 
         File export_file = new File("graphs\\DDGs\\file" + counter + ".dot");

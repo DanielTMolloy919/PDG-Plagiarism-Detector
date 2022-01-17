@@ -43,8 +43,8 @@ public class DDG {
         this.Statement_id_to_BasicBlock = blocks.Statement_id_to_BasicBlock;
         this.counter = counter;
         
-        count++;
-        System.out.println(count);
+        // count++;
+        // System.out.println(count);
 
         node_graph = new DefaultDirectedGraph<>(DependencyEdge.class);
 
@@ -104,6 +104,15 @@ public class DDG {
                     UniqueExpression unique_expression = new UniqueExpression(for_expression,i);
                     expression_importer(unique_expression, i);
                 }
+            }
+
+            else if (statement.isReturnStmt()) {
+                Optional<Expression> potential_expression = statement.asReturnStmt().getExpression();
+                if (potential_expression.isPresent()) {
+                    expression = new UniqueExpression(potential_expression.get(),i);
+                    expression_importer(expression, i);
+                }
+                
             }
          }
 
