@@ -3,11 +3,13 @@ package plagiarism_graph_comparison;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.stmt.Statement;
 
+import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.EdgeReversedGraph;
 import org.jgrapht.nio.dot.DOTExporter;
@@ -41,8 +43,17 @@ public class Export {
         String body = new String();
 
         for (int j = 0; j < statements.size(); j++) {
-            String addition = "[" + j + "] " + statements.get(j).toString() + "\n";
-            body += addition;
+            String lines_array[] = statements.get(j).toString().split("\n");
+            List<String> lines = Arrays.asList(lines_array);
+
+            for (String line : lines_array) {
+                if(line.charAt(0) == '/' && line.charAt(1) == '/') {
+                    continue;
+                }
+                String addition = "[" + j + "] " + line + "\n";
+                body += addition;
+                break;
+            }
         }
         f.write(body);
 
@@ -64,48 +75,48 @@ public class Export {
         export.exportGraph(cfg.node_graph, f);
     }
 
-    // public static void exporter(CDG cdg,int counter) throws IOException {
+    public static void exporter(Graph<BasicBlock, DependencyEdge> cdg,int counter) throws IOException {
 
-    //     File export_file = new File("graphs\\CDGs\\file" + counter + ".dot");
-
-    //     export_file.getParentFile().mkdirs();
-    //     export_file.createNewFile();
-
-    //     FileWriter f = new FileWriter(export_file);
-            
-    //     DOTExporter<Integer, DefaultEdge> export = new DOTExporter<>(v -> v.toString());
-
-    //     export.exportGraph(cdg.node_graph, f);
-    // }
-
-    // public static void exporter(PDG pdg,int counter) throws IOException {
-
-    //     File export_file = new File("graphs\\CDGs\\file" + counter + ".dot");
-
-    //     export_file.getParentFile().mkdirs();
-    //     export_file.createNewFile();
-
-    //     FileWriter f = new FileWriter(export_file);
-            
-    //     DOTExporter<Integer, DefaultEdge> export = new DOTExporter<>(v -> v.toString());
-
-    //     export.exportGraph(pdg.node_graph, f);
-    // }
-
-    public static void exporter(DDG ddg ,int counter) throws IOException {
-        File export_file = new File("graphs\\DDGs\\file" + counter + ".graphml");
+        File export_file = new File("graphs\\CDGs\\file" + counter + ".dot");
 
         export_file.getParentFile().mkdirs();
         export_file.createNewFile();
 
         FileWriter f = new FileWriter(export_file);
             
-        GraphMLExporter<BasicBlock, DependencyEdge> export = new GraphMLExporter<>(v -> v.toString());
-        export.setExportEdgeLabels(true);
-        export.setExportVertexLabels(true);
+        DOTExporter<BasicBlock, DependencyEdge> export = new DOTExporter<>(v -> v.toString());
+
+        export.exportGraph(cdg, f);
+    }
+
+    public static void exporter(DDG ddg,int counter) throws IOException {
+
+        File export_file = new File("graphs\\DDGs\\file" + counter + ".dot");
+
+        export_file.getParentFile().mkdirs();
+        export_file.createNewFile();
+
+        FileWriter f = new FileWriter(export_file);
+            
+        DOTExporter<BasicBlock, DependencyEdge> export = new DOTExporter<>(v -> v.toString());
 
         export.exportGraph(ddg.node_graph, f);
     }
+
+    // public static void exporter(DDG ddg ,int counter) throws IOException {
+    //     File export_file = new File("graphs\\DDGs\\file" + counter + ".graphml");
+
+    //     export_file.getParentFile().mkdirs();
+    //     export_file.createNewFile();
+
+    //     FileWriter f = new FileWriter(export_file);
+            
+    //     GraphMLExporter<BasicBlock, DependencyEdge> export = new GraphMLExporter<>(v -> v.toString());
+    //     export.setExportEdgeLabels(true);
+    //     export.setExportVertexLabels(true);
+
+    //     export.exportGraph(ddg.node_graph, f);
+    // }
 
     public static void exporter(PDG pdg ,int counter) throws IOException {
         File export_file = new File("graphs\\PDGs\\file" + counter + ".graphml");

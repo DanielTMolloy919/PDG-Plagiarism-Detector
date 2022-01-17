@@ -6,12 +6,12 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.stmt.Statement;
 
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.AllDirectedPaths;
+import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 
 public class PDG {
@@ -23,7 +23,8 @@ public class PDG {
     static int count = 0; // for debugging
 
     CFG cfg;
-    Graph<BasicBlock, DependencyEdge> node_graph; // The method's data dependence graph
+    Graph<BasicBlock, DependencyEdge> node_graph; // The method's program dependence graph
+    Graph<BasicBlock, DependencyEdge> cdg; // The method's control dependence subgraph, for demonstration
 
     LinkedHashMap<BasicBlock, BasicBlock> bb_ipdom;
 
@@ -42,7 +43,13 @@ public class PDG {
         // count++;
         // System.out.println(count);
 
-        bb_ipdom = new LinkedHashMap<>(); // contains the immediate post dominator for each statement 
+        bb_ipdom = new LinkedHashMap<>(); // contains the immediate post dominator for each statement
+
+        cdg = new DefaultDirectedGraph<>(DependencyEdge.class);
+
+        for (BasicBlock basicBlock : basic_blocks) {
+            cdg.addVertex(basicBlock); // load all the statement nodes
+        }
         
         // get the immediate post dominator for every statement but the last
         for (int i = 0; i < basic_blocks.size() - 1; i++) {
@@ -62,6 +69,7 @@ public class PDG {
                 if (!is_connection_eliminated(basic_blocks.get(i), basic_blocks.get(j))) {
                     node_graph.addEdge(basic_blocks.get(i), basic_blocks.get(j), new DependencyEdge("CD"));
                     // Export.exporter(this, counter);
+                    cdg.addEdge(basic_blocks.get(i), basic_blocks.get(j), new DependencyEdge("CD"));
                 }
             }
         }

@@ -38,6 +38,7 @@ public class Method {
 
         this.pdg = new PDG(ddg, counter);
 
+        Export.exporter(pdg.cdg, counter);
         Export.exporter(pdg, counter);
 
         counter++;

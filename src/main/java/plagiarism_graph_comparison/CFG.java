@@ -43,8 +43,8 @@ public class CFG {
         this.Statement_id_to_BasicBlock = blocks.Statement_id_to_BasicBlock;
         this.counter = counter;
 
-        // count++;
-        // System.out.println(count);
+        count++;
+        System.out.println(count);
 
         node_graph = new DefaultDirectedGraph<>(DefaultEdge.class);
 
@@ -120,6 +120,7 @@ public class CFG {
             else if (statement.isForStmt() || statement.isDoStmt() || statement.isForEachStmt()) {
                 link(get_last_child(current_id), current_id);
                 link(current_id, get_subsequent_sibling(current_id));
+                link(current_id, current_id+1);
             }
 
             // if its a 'while' statement
@@ -189,7 +190,7 @@ public class CFG {
                 link(current_id, current_id + 1);
             }
 
-            // Export.exporter(this,counter);
+            Export.exporter(this,counter);
 
             current_id++;
         }
