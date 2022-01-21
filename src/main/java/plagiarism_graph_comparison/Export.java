@@ -10,6 +10,7 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.stmt.Statement;
 
 import org.jgrapht.Graph;
+import org.jgrapht.graph.AsSubgraph;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.EdgeReversedGraph;
 import org.jgrapht.nio.dot.DOTExporter;
@@ -18,7 +19,8 @@ import org.jgrapht.nio.graphml.GraphMLExporter;
 public class Export {
     public static void exporter(MethodDeclaration method_node,int counter) throws IOException {
 
-        File export_file = new File("graphs\\Methods\\file" + counter + ".txt");
+        File export_file = new File("graphs\\" + counter + "\\methods.txt");
+
 
         export_file.getParentFile().mkdirs();
         export_file.createNewFile();
@@ -33,7 +35,7 @@ public class Export {
 
     public static void exporter(List<Statement> statements,int counter) throws IOException {
 
-        File export_file = new File("graphs\\Statements\\file" + counter + ".txt");
+        File export_file = new File("graphs\\" + counter + "\\statements.txt");
 
         export_file.getParentFile().mkdirs();
         export_file.createNewFile();
@@ -62,8 +64,7 @@ public class Export {
     }
 
     public static void exporter(CFG cfg,int counter) throws IOException {
-
-        File export_file = new File("graphs\\CFGs\\file" + counter + ".dot");
+        File export_file = new File("graphs\\" + counter + "\\CFG.dot");
 
         export_file.getParentFile().mkdirs();
         export_file.createNewFile();
@@ -77,7 +78,7 @@ public class Export {
 
     public static void exporter(Graph<BasicBlock, DependencyEdge> cdg,int counter) throws IOException {
 
-        File export_file = new File("graphs\\CDGs\\file" + counter + ".dot");
+        File export_file = new File("graphs\\" + counter + "\\CDG.dot");
 
         export_file.getParentFile().mkdirs();
         export_file.createNewFile();
@@ -89,9 +90,23 @@ public class Export {
         export.exportGraph(cdg, f);
     }
 
+    public static void exporter(AsSubgraph<BasicBlock, DependencyEdge> spdg,int counter, int counter2) throws IOException {
+
+        File export_file = new File("graphs\\" + counter + "\\subgraphs\\" + counter2 + ".dot");
+
+        export_file.getParentFile().mkdirs();
+        export_file.createNewFile();
+
+        FileWriter f = new FileWriter(export_file);
+            
+        DOTExporter<BasicBlock, DependencyEdge> export = new DOTExporter<>(v -> v.toString());
+
+        export.exportGraph(spdg, f);
+    }
+
     public static void exporter(Graph<BasicBlock, DependencyEdge> cdg,int counter, String raw) throws IOException {
 
-        File export_file = new File("graphs\\Raw-CDGs\\file" + counter + ".dot");
+        File export_file = new File("graphs\\" + counter + "\\CDG-Raw.dot");
 
         export_file.getParentFile().mkdirs();
         export_file.createNewFile();
@@ -105,7 +120,7 @@ public class Export {
 
     public static void exporter(DDG ddg,int counter) throws IOException {
 
-        File export_file = new File("graphs\\DDGs\\file" + counter + ".dot");
+        File export_file = new File("graphs\\" + counter + "\\DDG.dot");
 
         export_file.getParentFile().mkdirs();
         export_file.createNewFile();
@@ -133,7 +148,7 @@ public class Export {
     // }
 
     public static void exporter(PDG pdg ,int counter) throws IOException {
-        File export_file = new File("graphs\\PDGs\\file" + counter + ".graphml");
+        File export_file = new File("graphs\\" + counter + "\\PDG.graphml");
 
         export_file.getParentFile().mkdirs();
         export_file.createNewFile();
@@ -148,7 +163,9 @@ public class Export {
     }
 
     public static void exporter(EdgeReversedGraph<BasicBlock, DefaultEdge> node_graph, int counter) throws IOException {
-        File export_file = new File("graphs\\Reversed_CFGs\\file" + counter + ".dot");
+        File export_file = new File("graphs\\" + counter + "\\CFG-Reversed.dot");
+
+        
 
         export_file.getParentFile().mkdirs();
         export_file.createNewFile();

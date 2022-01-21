@@ -19,6 +19,8 @@ public class Method {
 
     PDG pdg; // method's program dependency graph
 
+    GraphCompare graph_compare;
+
     public Method(MethodDeclaration method_node) throws IOException, StatementNotFoundException {
         this.method_node = method_node;
 
@@ -40,6 +42,8 @@ public class Method {
 
         Export.exporter(pdg.cdg, counter);
         Export.exporter(pdg, counter);
+
+        this.graph_compare = new GraphCompare(pdg, pdg, counter);
 
         counter++;
     }

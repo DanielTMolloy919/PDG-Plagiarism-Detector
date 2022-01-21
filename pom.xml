@@ -40,7 +40,6 @@
     </build>
 
     <dependencies>
-
         <dependency>
             <groupId>org.jgrapht</groupId>
             <artifactId>jgrapht-io</artifactId>
@@ -57,6 +56,12 @@
             <groupId>com.github.javaparser</groupId>
             <artifactId>javaparser-symbol-solver-core</artifactId>
             <version>3.23.1</version>
+        </dependency>
+    
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-math3</artifactId>
+            <version>3.6.1</version>
         </dependency>
     </dependencies>
 </project>

@@ -23,6 +23,9 @@ public class BasicBlock {
     List<String> defined_variables;
     List<String> used_variables;
 
+    List<String> attributes;
+    String type;
+
     public BasicBlock(Statement statement, int id) {
         this.statement = statement;
         this.id = id;
@@ -32,6 +35,8 @@ public class BasicBlock {
         
         defined_variables = new ArrayList<String>();
         used_variables = new ArrayList<String>();
+
+        attributes = new ArrayList<String>();
     }
 
     public BasicBlock(boolean start) {
@@ -66,6 +71,46 @@ public class BasicBlock {
             if (!this.used_variables.contains(variable)) {
                 this.used_variables.add(variable);
             }
+        }
+    }
+
+    public void add_attribute(String attribute) {
+        if (!attributes.contains(attribute)) {
+            this.attributes.add(attribute);
+        }
+    }
+
+    public void generate_type() {
+        if (attributes.contains("control")) {
+            this.type = "control";
+        }
+
+        else if (attributes.contains("jump")) {
+            this.type = "jump";
+        }
+
+        else if (attributes.contains("return")) {
+            this.type = "return";
+        }
+
+        else if (attributes.contains("declaration")) {
+            this.type = "declaration";
+        }
+
+        else if (attributes.contains("assignment")) {
+            this.type = "assignment";
+        }
+        
+        else if (attributes.contains("method-call")) {
+            this.type = "method-call";
+        }
+
+        else if (attributes.contains("expression")) {
+            this.type = "assignment";
+        }
+
+        else {
+            this.type = "other";
         }
     }
 

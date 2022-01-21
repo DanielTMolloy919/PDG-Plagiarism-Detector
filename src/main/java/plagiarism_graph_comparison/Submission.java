@@ -35,7 +35,6 @@ public class Submission {
 
         significant_mds.addAll(method_nodes);
 
-        // Method test_method = new Method(method_nodes.get(64));
 
         // remove methods with less than 5 statements from the list
         for (MethodDeclaration method_node : method_nodes) {
@@ -45,16 +44,19 @@ public class Submission {
         }
 
         // iterate over all methods
+        
+        Method test_method = new Method(significant_mds.get(4));
 
-        significant_mds.stream().forEach(method_node -> {
-            try {
-                method_objects.add(new Method(method_node));
-            } catch (IOException e) {
-                e.printStackTrace();
-                return;
-            } catch (StatementNotFoundException e) {
-                e.printStackTrace();
-            }
-        }); // create a method object for each node, which will build a pdg for each
+
+        // significant_mds.stream().forEach(method_node -> {
+        //     try {
+        //         method_objects.add(new Method(method_node));
+        //     } catch (IOException e) {
+        //         e.printStackTrace();
+        //         return;
+        //     } catch (StatementNotFoundException e) {
+        //         e.printStackTrace();
+        //     }
+        // }); // create a method object for each node, which will build a pdg for each
     }
 }

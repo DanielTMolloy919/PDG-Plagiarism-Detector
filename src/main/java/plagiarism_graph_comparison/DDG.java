@@ -63,46 +63,47 @@ public class DDG {
         // get all statements that are expressions
         for (int i = 0; i < statements.size(); i++) {
             Statement statement = statements.get(i);
+            BasicBlock bb = Statement_id_to_BasicBlock.get(statement);
             UniqueExpression expression;
 
             if (statement.isExpressionStmt()) {
                 expression = new UniqueExpression(statement.asExpressionStmt().getExpression(),i);
-                expression_importer(expression, i);
+                expression_importer(expression, i,"expression");
             }
 
             else if (statement.isIfStmt()) {
                 expression = new UniqueExpression(statement.asIfStmt().getCondition(),i);
-                expression_importer(expression, i);
+                expression_importer(expression, i,"control");
             }
 
             else if (statement.isDoStmt()) {
                 expression = new UniqueExpression(statement.asDoStmt().getCondition(),i);
-                expression_importer(expression, i);
+                expression_importer(expression, i,"control");
             }
 
             else if (statement.isWhileStmt()) {
                 expression = new UniqueExpression(statement.asWhileStmt().getCondition(),i);
-                expression_importer(expression, i);
+                expression_importer(expression, i,"control");
             }
 
             else if (statement.isForEachStmt()) {
                 // expression = new UniqueExpression(statement.asForEachStmt().getIterable());
                 expression = new UniqueExpression(statement.asForEachStmt().getIterable(),i);
-                expression_importer(expression, i);
+                expression_importer(expression, i,"control");
                 expression = new UniqueExpression(statement.asForEachStmt().getVariable(),i);
-                expression_importer(expression, i);
+                expression_importer(expression, i,"control");
             }
 
             else if (statement.isForStmt()) {
                 List<Expression> expressions = statement.asForStmt().getInitialization();
                 for (Expression for_expression : expressions) {
                     UniqueExpression unique_expression = new UniqueExpression(for_expression,i);
-                    expression_importer(unique_expression, i);
+                    expression_importer(unique_expression, i,"control");
                 }
                 expressions = statement.asForStmt().getUpdate();
                 for (Expression for_expression : expressions) {
                     UniqueExpression unique_expression = new UniqueExpression(for_expression,i);
-                    expression_importer(unique_expression, i);
+                    expression_importer(unique_expression, i,"control");
                 }
             }
 
@@ -110,7 +111,7 @@ public class DDG {
                 Optional<Expression> potential_expression = statement.asReturnStmt().getExpression();
                 if (potential_expression.isPresent()) {
                     expression = new UniqueExpression(potential_expression.get(),i);
-                    expression_importer(expression, i);
+                    expression_importer(expression, i,"return");
                 }
                 
             }
@@ -122,18 +123,21 @@ public class DDG {
         // for (ListIterator<UniqueExpression> iter = expressions.listIterator(); iter.hasNext();) {
             UniqueExpression uexpression = expressions.get(i);
             Expression expression = uexpression.expression;
+            BasicBlock bb = Expression_to_BasicBlock.get(uexpression);
 
             List<String> defined_variables = new ArrayList<>();
             List<String> used_variables = new ArrayList<>();
 
             if (expression.isVariableDeclarationExpr()) { // if a variable is being declared, i.e. int i = 1;
                 defined_variables = expression.asVariableDeclarationExpr().getVariables().stream().map(x -> x.getName().asString()).collect(Collectors.toList()); // extract variable strings being assigned
+                bb.add_attribute("declaration");
             }
             
             else if (expression.isAssignExpr()) {
                 // get the two expression comprising an assignment and add to the queue
                 add_to_queue(uexpression, expression.asAssignExpr().getValue(),false);
                 add_to_queue(uexpression, expression.asAssignExpr().getTarget(),true);
+                bb.add_attribute("assignment");
             }
 
             else if (expression.isMethodCallExpr()) {
@@ -146,8 +150,8 @@ public class DDG {
                     Expression scope = expression.asMethodCallExpr().getScope().get();
                     add_to_queue(uexpression, scope,false);
                 }
-                // used_variables.addAll(expression.asMethodCallExpr().getArguments().stream().map(x -> x.toString()).collect(Collectors.toList()));
 
+                bb.add_attribute("method-call");
             }
 
             else if (expression.isObjectCreationExpr()) {
@@ -228,9 +232,11 @@ public class DDG {
         }
     }
 
-    public void expression_importer(UniqueExpression expression, int i) {
+    public void expression_importer(UniqueExpression expression, int i,String attribute) {
+        BasicBlock bb = Statement_id_to_BasicBlock.get(Integer.toString(i));
         expressions.add(expression);
-        Expression_to_BasicBlock.put(expression, Statement_id_to_BasicBlock.get(Integer.toString(i))); // makes sure the expression's associated statement can be found later on
+        Expression_to_BasicBlock.put(expression, bb); // makes sure the expression's associated statement can be found later on
+        bb.add_attribute(attribute);
     }
 
     // If theres a previous instance of a variable being defined or used, link it in the DDG according to DDG construction rules

@@ -3,7 +3,7 @@ package plagiarism_graph_comparison;
 import org.jgrapht.graph.DefaultEdge;
 
 public class DependencyEdge extends DefaultEdge {
-    private String label;
+    String label;
 
 
     public DependencyEdge(String label)
