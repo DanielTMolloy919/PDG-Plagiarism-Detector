@@ -63,6 +63,7 @@ public class GraphCompare {
 
             AsSubgraph<BasicBlock, DependencyEdge> subgraph = new AsSubgraph<>(pdg2.node_graph, subgraph_vertexes);
             // Export.exporter(subgraph, counter, iterator_count);
+            System.out.println(iterator_count);
 
             if (is_isomorphic(pdg1.node_graph, subgraph)) {
                 System.out.println("Isomorphism Detected");
@@ -92,28 +93,28 @@ public class GraphCompare {
     }
 }
 
-class VertexComparator implements Comparator<BasicBlock> {
+// class VertexComparator implements Comparator<BasicBlock> {
     
-    @Override
-    public int compare(BasicBlock bb1, BasicBlock bb2) {
-        if (bb1.type.equals(bb2.type)) {
-            return 1;
-        }
-        else {
-            return -1;
-        }
-    }
-}
+//     @Override
+//     public int compare(BasicBlock bb1, BasicBlock bb2) {
+//         if (bb1.type.equals(bb2.type)) {
+//             return 1;
+//         }
+//         else {
+//             return -1;
+//         }
+//     }
+// }
 
-class EdgeComparator implements Comparator<DependencyEdge> {
+// class EdgeComparator implements Comparator<DependencyEdge> {
     
-    @Override
-    public int compare(DependencyEdge de1, DependencyEdge de2) {
-        if (de1.label.equals(de1.label)) {
-            return 1;
-        }
-        else {
-            return -1;
-        }
-    }
-}
+//     @Override
+//     public int compare(DependencyEdge de1, DependencyEdge de2) {
+//         if (de1.label.equals(de1.label)) {
+//             return 1;
+//         }
+//         else {
+//             return -1;
+//         }
+//     }
+// }

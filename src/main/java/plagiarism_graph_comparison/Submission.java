@@ -1,12 +1,22 @@
 package plagiarism_graph_comparison;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ParseResult;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.stmt.Statement;
+import com.github.javaparser.utils.ParserCollectionStrategy;
+import com.github.javaparser.utils.ProjectRoot;
 import com.github.javaparser.utils.SourceRoot;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.DirectoryFileFilter;
+import org.apache.commons.io.filefilter.RegexFileFilter;
 
 import plagiarism_graph_comparison.CFG.StatementNotFoundException;
 
@@ -16,24 +26,41 @@ public class Submission {
     ArrayList<MethodDeclaration> method_nodes;
     ArrayList<MethodDeclaration> significant_mds;
     ArrayList<Method> method_objects;
+    List<CompilationUnit> compilations;
+
     int counter;
 
-    public Submission(SourceRoot root_dir) throws IOException, StatementNotFoundException  {
+    static int submission_count = 0;
+    static int method_count = 0;
 
-        SourceRoot source = root_dir;
-        
-        source.tryToParse();
+    public Submission(File root_dir) throws IOException, StatementNotFoundException  {
+
+        submission_count++;
+
+        compilations = new ArrayList<>();
+
+        Collection<File> source_files = FileUtils.listFiles(root_dir, new String[] { "java" }, true);
+
+        JavaParser parser = new JavaParser();
+
+        for (File file : source_files) {
+            ParseResult<CompilationUnit> result =  parser.parse(file);
+
+            if (result.isSuccessful() && result.getResult().isPresent()) {
+                compilations.add(result.getResult().get());
+            }
+        }
 
         method_nodes = new ArrayList<>(); // empty list of method nodes
         significant_mds = new ArrayList<>();
 
         method_objects = new ArrayList<Method>();
-
-        List<CompilationUnit> compilations = source.getCompilationUnits(); // get all the compilation units from the SourceRoot
         
         compilations.stream().forEach(cp -> this.method_nodes.addAll(cp.findAll(MethodDeclaration.class))); // loop through each compilation unit, find all the method nodes and add them to the list
 
         significant_mds.addAll(method_nodes);
+
+        method_count += method_nodes.size();
 
 
         // remove methods with less than 5 statements from the list
@@ -44,19 +71,19 @@ public class Submission {
         }
 
         // iterate over all methods
-        
-        Method test_method = new Method(significant_mds.get(4));
+        significant_mds.stream().forEach(method_node -> {
+            try {
+                method_objects.add(new Method(method_node));
+            } catch (IOException e) {
+                e.printStackTrace();
+                return;
+            } catch (StatementNotFoundException e) {
+                e.printStackTrace();
+            }
+        }); // create a method object for each node, which will build a pdg for each
+    }
 
-
-        // significant_mds.stream().forEach(method_node -> {
-        //     try {
-        //         method_objects.add(new Method(method_node));
-        //     } catch (IOException e) {
-        //         e.printStackTrace();
-        //         return;
-        //     } catch (StatementNotFoundException e) {
-        //         e.printStackTrace();
-        //     }
-        // }); // create a method object for each node, which will build a pdg for each
+    private void project_importer(SourceRoot source_root) {
+        // Collection files = FileUtils.listFiles(source_root.);
     }
 }
