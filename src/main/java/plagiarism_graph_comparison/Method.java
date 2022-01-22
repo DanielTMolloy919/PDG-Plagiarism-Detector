@@ -7,6 +7,9 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import plagiarism_graph_comparison.CFG.StatementNotFoundException;
 
 public class Method {
+    String file_name;
+    String method_name;
+
     static int counter; // How many objects this class has created - used for naming export files
     
     MethodDeclaration method_node; // The method node given to the constructor when a new method object is created
@@ -21,7 +24,10 @@ public class Method {
 
     GraphCompare graph_compare;
 
-    public Method(MethodDeclaration method_node) throws IOException, StatementNotFoundException {
+    public Method(MethodDeclaration method_node,String file_name) throws IOException, StatementNotFoundException {
+        this.file_name = file_name;
+        this.method_name = method_node.getNameAsString();
+
         this.method_node = method_node;
 
         Export.exporter(method_node, counter);
@@ -46,5 +52,10 @@ public class Method {
         this.graph_compare = new GraphCompare(pdg, pdg, counter);
 
         counter++;
+    }
+
+    @Override
+    public String toString() {
+        return "Method \'" + method_name + "\' in file \'" + file_name + "\'";
     }
 }

@@ -3,6 +3,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import com.github.javaparser.JavaParser;
@@ -23,6 +24,8 @@ import plagiarism_graph_comparison.CFG.StatementNotFoundException;
 
 public class Submission {
 
+    String file_name;
+
     ArrayList<MethodDeclaration> method_nodes;
     ArrayList<MethodDeclaration> significant_mds;
     ArrayList<Method> method_objects;
@@ -33,7 +36,11 @@ public class Submission {
     static int submission_count = 0;
     static int method_count = 0;
 
+    LinkedHashMap<MethodDeclaration,File> md_to_file;
+
     public Submission(File root_dir) throws IOException, StatementNotFoundException  {
+
+        file_name = root_dir.getPath();
 
         submission_count++;
 
@@ -43,11 +50,15 @@ public class Submission {
 
         JavaParser parser = new JavaParser();
 
+        LinkedHashMap<CompilationUnit,File> cu_to_file = new LinkedHashMap<>();
+
         for (File file : source_files) {
             ParseResult<CompilationUnit> result =  parser.parse(file);
 
             if (result.isSuccessful() && result.getResult().isPresent()) {
-                compilations.add(result.getResult().get());
+                CompilationUnit cu = result.getResult().get();
+                compilations.add(cu);
+                cu_to_file.put(cu, file);
             }
         }
 
@@ -55,8 +66,18 @@ public class Submission {
         significant_mds = new ArrayList<>();
 
         method_objects = new ArrayList<Method>();
+
+        md_to_file = new LinkedHashMap<>();
+
+        for (CompilationUnit cp : compilations) {
+            List<MethodDeclaration> methods = cp.findAll(MethodDeclaration.class);
+            for (MethodDeclaration method : methods) {
+                md_to_file.put(method, cu_to_file.get(cp));
+                method_nodes.add(method);
+            }
+        }
         
-        compilations.stream().forEach(cp -> this.method_nodes.addAll(cp.findAll(MethodDeclaration.class))); // loop through each compilation unit, find all the method nodes and add them to the list
+        // compilations.stream().forEach(cp -> this.method_nodes.addAll(cp.findAll(MethodDeclaration.class))); // loop through each compilation unit, find all the method nodes and add them to the list
 
         significant_mds.addAll(method_nodes);
 
@@ -73,7 +94,7 @@ public class Submission {
         // iterate over all methods
         significant_mds.stream().forEach(method_node -> {
             try {
-                method_objects.add(new Method(method_node));
+                method_objects.add(new Method(method_node,md_to_file.get(method_node).getPath()));
             } catch (IOException e) {
                 e.printStackTrace();
                 return;
