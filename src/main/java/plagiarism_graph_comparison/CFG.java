@@ -190,7 +190,7 @@ public class CFG {
                 link(current_id, current_id + 1);
             }
 
-            Export.exporter(this,counter);
+            // Export.exporter(this,counter);
 
             current_id++;
         }

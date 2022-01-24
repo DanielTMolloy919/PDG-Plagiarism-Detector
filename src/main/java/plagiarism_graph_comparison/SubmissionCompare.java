@@ -2,7 +2,6 @@ package plagiarism_graph_comparison;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -13,13 +12,38 @@ import org.apache.commons.math3.util.CombinatoricsUtils;
 import org.jgrapht.Graph;
 import org.jgrapht.alg.isomorphism.VF2SubgraphIsomorphismInspector;
 import org.jgrapht.graph.AsSubgraph;
-import org.jgrapht.graph.DefaultDirectedGraph;
 
-public class GraphCompare {
+public class SubmissionCompare {
     Comparator<BasicBlock> vertex_comparator;
     Comparator<DependencyEdge> edge_comparator;
 
-    public GraphCompare(PDG pdg1, PDG pdg2, int counter) throws IOException {
+    ArrayList<Method> sb1_methods;
+    ArrayList<Method> sb2_methods;
+
+    public SubmissionCompare(Submission sb1, Submission sb2) throws IOException {
+        sb1_methods = sb1.method_objects;
+        sb2_methods = sb2.method_objects;
+
+        for (Method method_1 : sb1_methods) {
+            for (Method method_2 : sb2_methods) {
+                compare(method_1, method_2);
+            }
+        }
+        // Iterator<int[]> combinations = CombinatoricsUtils.combinationsIterator(sb1_methods.size(),sb2_methods.size());
+        // ArrayList<ArrayList<Method>> plagiarism_pairs = new ArrayList<ArrayList<Method>>();
+
+        // while (combinations.hasNext()) {
+        //     final int[] combination = combinations.next();
+
+        //     compare(sb1_methods.get(combination[0]),sb2_methods.get(combination[1]));
+
+        //     itertools
+        // }
+    }
+
+    private void compare(Method m1, Method m2) throws IOException {
+        PDG pdg1= m1.pdg;
+        PDG pdg2 = m2.pdg;
 
         Set<BasicBlock> bb_set = pdg1.node_graph.vertexSet();
         for (BasicBlock bb : bb_set) {
@@ -32,7 +56,7 @@ public class GraphCompare {
         }
 
         if (is_gamma_isomorphic(pdg1, pdg2)) {
-            System.out.println("Potential Plagiarism between submissions " + pdg1.counter + " and " + pdg2.counter);
+            System.out.println("Potential Plagiarism between submissions " + m1.toString() + " and " + m2.toString());
         }
     }
 
@@ -63,10 +87,10 @@ public class GraphCompare {
 
             AsSubgraph<BasicBlock, DependencyEdge> subgraph = new AsSubgraph<>(pdg2.node_graph, subgraph_vertexes);
             // Export.exporter(subgraph, counter, iterator_count);
-            System.out.println(iterator_count);
+            // System.out.println(iterator_count);
 
             if (is_isomorphic(pdg1.node_graph, subgraph)) {
-                System.out.println("Isomorphism Detected");
+                // System.out.println("Isomorphism Detected");
                 return true;
             }
 
@@ -93,28 +117,29 @@ public class GraphCompare {
     }
 }
 
-// class VertexComparator implements Comparator<BasicBlock> {
-    
-//     @Override
-//     public int compare(BasicBlock bb1, BasicBlock bb2) {
-//         if (bb1.type.equals(bb2.type)) {
-//             return 1;
-//         }
-//         else {
-//             return -1;
-//         }
-//     }
-// }
+// class TwoListCombine<T> implements Iterator<List<T>> {
 
-// class EdgeComparator implements Comparator<DependencyEdge> {
-    
+//     final List<T> list1;
+//     final List<T> list2;
+//     int list1_position;
+//     int list2_position;
+
+//     public TwoListCombine(List<T> list1, List<T> list2) {
+//         this.list1 = list1;
+//         this.list2 = list2;
+//         list1_position = 0;
+//         list2_position = 0;
+//     }
+
 //     @Override
-//     public int compare(DependencyEdge de1, DependencyEdge de2) {
-//         if (de1.label.equals(de1.label)) {
-//             return 1;
-//         }
-//         else {
-//             return -1;
-//         }
+//     public boolean hasNext() {
+//         // has first index not yet reached max position?
+//         return list1_position < list1.size() || list2_position < list2.size();
+//     }
+
+//     @Override
+//     public List<T> next() {
+//         List<T> result = new ArrayList<>(2);
+               
 //     }
 // }

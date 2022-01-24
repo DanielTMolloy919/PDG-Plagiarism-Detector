@@ -78,7 +78,7 @@ public class PDG {
             }
         }
 
-        Export.exporter(cdg, counter,"RAW");
+        // Export.exporter(cdg, counter,"RAW");
 
         all_cdg_paths = new AllDirectedPaths<>(cdg);
 

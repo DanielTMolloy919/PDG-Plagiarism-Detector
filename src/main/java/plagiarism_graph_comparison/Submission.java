@@ -25,8 +25,9 @@ import plagiarism_graph_comparison.CFG.StatementNotFoundException;
 public class Submission {
 
     String file_name;
+    String submission_name;
 
-    ArrayList<MethodDeclaration> method_nodes;
+    ArrayList<MethodDeclaration> mds;
     ArrayList<MethodDeclaration> significant_mds;
     ArrayList<Method> method_objects;
     List<CompilationUnit> compilations;
@@ -41,6 +42,8 @@ public class Submission {
     public Submission(File root_dir) throws IOException, StatementNotFoundException  {
 
         file_name = root_dir.getPath();
+
+        submission_name = root_dir.getName();
 
         submission_count++;
 
@@ -62,7 +65,7 @@ public class Submission {
             }
         }
 
-        method_nodes = new ArrayList<>(); // empty list of method nodes
+        mds = new ArrayList<>(); // empty list of method nodes
         significant_mds = new ArrayList<>();
 
         method_objects = new ArrayList<Method>();
@@ -73,20 +76,20 @@ public class Submission {
             List<MethodDeclaration> methods = cp.findAll(MethodDeclaration.class);
             for (MethodDeclaration method : methods) {
                 md_to_file.put(method, cu_to_file.get(cp));
-                method_nodes.add(method);
+                mds.add(method);
             }
         }
         
         // compilations.stream().forEach(cp -> this.method_nodes.addAll(cp.findAll(MethodDeclaration.class))); // loop through each compilation unit, find all the method nodes and add them to the list
 
-        significant_mds.addAll(method_nodes);
+        significant_mds.addAll(mds);
 
-        method_count += method_nodes.size();
+        method_count += mds.size();
 
 
         // remove methods with less than 5 statements from the list
-        for (MethodDeclaration method_node : method_nodes) {
-            if (method_node.findAll(Statement.class).size() < 5) {
+        for (MethodDeclaration method_node : mds) {
+            if (method_node.findAll(Statement.class).size() <= 10) {
                 significant_mds.remove(method_node);
             }
         }
@@ -94,7 +97,7 @@ public class Submission {
         // iterate over all methods
         significant_mds.stream().forEach(method_node -> {
             try {
-                method_objects.add(new Method(method_node,md_to_file.get(method_node).getPath()));
+                method_objects.add(new Method(method_node,this));
             } catch (IOException e) {
                 e.printStackTrace();
                 return;

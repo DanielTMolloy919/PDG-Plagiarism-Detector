@@ -17,9 +17,11 @@ import org.jgrapht.nio.dot.DOTExporter;
 import org.jgrapht.nio.graphml.GraphMLExporter;
 
 public class Export {
-    public static void exporter(MethodDeclaration method_node,int counter) throws IOException {
+    public static void exportMD(Method method,int counter) throws IOException {
 
-        File export_file = new File("graphs\\" + counter + "\\methods.txt");
+        MethodDeclaration method_node = method.method_node;
+
+        File export_file = new File("graphs\\" + method.submission_name + "\\" + method.method_name + "\\methods.txt");
 
 
         export_file.getParentFile().mkdirs();
@@ -33,9 +35,11 @@ public class Export {
         f.close();
     }
 
-    public static void exporter(List<Statement> statements,int counter) throws IOException {
+    public static void exportStmts(Method method,int counter) throws IOException {
 
-        File export_file = new File("graphs\\" + counter + "\\statements.txt");
+        List<Statement> statements = method.statement_graph.statements;
+
+        File export_file = new File("graphs\\" + method.submission_name + "\\" + method.method_name + "\\statements.txt");
 
         export_file.getParentFile().mkdirs();
         export_file.createNewFile();
@@ -63,8 +67,10 @@ public class Export {
         f.close();
     }
 
-    public static void exporter(CFG cfg,int counter) throws IOException {
-        File export_file = new File("graphs\\" + counter + "\\CFG.dot");
+    public static void exportCFG(Method method,int counter) throws IOException {
+        CFG cfg = method.cfg;
+
+        File export_file = new File("graphs\\" + method.submission_name + "\\" + method.method_name + "\\CFG.dot");
 
         export_file.getParentFile().mkdirs();
         export_file.createNewFile();
@@ -76,37 +82,11 @@ public class Export {
         export.exportGraph(cfg.node_graph, f);
     }
 
-    public static void exporter(Graph<BasicBlock, DependencyEdge> cdg,int counter) throws IOException {
+    public static void exportCDG(Method method,int counter) throws IOException {
 
-        File export_file = new File("graphs\\" + counter + "\\CDG.dot");
+        Graph<BasicBlock, DependencyEdge> cdg = method.pdg.cdg;
 
-        export_file.getParentFile().mkdirs();
-        export_file.createNewFile();
-
-        FileWriter f = new FileWriter(export_file);
-            
-        DOTExporter<BasicBlock, DependencyEdge> export = new DOTExporter<>(v -> v.toString());
-
-        export.exportGraph(cdg, f);
-    }
-
-    public static void exporter(AsSubgraph<BasicBlock, DependencyEdge> spdg,int counter, int counter2) throws IOException {
-
-        File export_file = new File("graphs\\" + counter + "\\subgraphs\\" + counter2 + ".dot");
-
-        export_file.getParentFile().mkdirs();
-        export_file.createNewFile();
-
-        FileWriter f = new FileWriter(export_file);
-            
-        DOTExporter<BasicBlock, DependencyEdge> export = new DOTExporter<>(v -> v.toString());
-
-        export.exportGraph(spdg, f);
-    }
-
-    public static void exporter(Graph<BasicBlock, DependencyEdge> cdg,int counter, String raw) throws IOException {
-
-        File export_file = new File("graphs\\" + counter + "\\CDG-Raw.dot");
+        File export_file = new File("graphs\\" + method.submission_name + "\\" + method.method_name + "\\CDG.dot");
 
         export_file.getParentFile().mkdirs();
         export_file.createNewFile();
@@ -118,9 +98,41 @@ public class Export {
         export.exportGraph(cdg, f);
     }
 
-    public static void exporter(DDG ddg,int counter) throws IOException {
+    // public static void exporter(AsSubgraph<BasicBlock, DependencyEdge> spdg,int counter, int counter2) throws IOException {
 
-        File export_file = new File("graphs\\" + counter + "\\DDG.dot");
+    //     File export_file = new File("graphs\\" + counter + "\\subgraphs\\" + counter2 + ".dot");
+
+    //     export_file.getParentFile().mkdirs();
+    //     export_file.createNewFile();
+
+    //     FileWriter f = new FileWriter(export_file);
+            
+    //     DOTExporter<BasicBlock, DependencyEdge> export = new DOTExporter<>(v -> v.toString());
+
+    //     export.exportGraph(spdg, f);
+    // }
+
+    // public static void exporter(Method method,int counter, String raw) throws IOException {
+
+    //     Graph<BasicBlock, DependencyEdge> cdg = me
+
+    //     File export_file = new File("graphs\\" + counter + "\\CDG-Raw.dot");
+
+    //     export_file.getParentFile().mkdirs();
+    //     export_file.createNewFile();
+
+    //     FileWriter f = new FileWriter(export_file);
+            
+    //     DOTExporter<BasicBlock, DependencyEdge> export = new DOTExporter<>(v -> v.toString());
+
+    //     export.exportGraph(cdg, f);
+    // }
+
+    public static void exportDDG(Method method,int counter) throws IOException {
+
+        DDG ddg = method.ddg;
+
+        File export_file = new File("graphs\\" + method.submission_name + "\\" + method.method_name + "\\DDG.dot");
 
         export_file.getParentFile().mkdirs();
         export_file.createNewFile();
@@ -147,8 +159,10 @@ public class Export {
     //     export.exportGraph(ddg.node_graph, f);
     // }
 
-    public static void exporter(PDG pdg ,int counter) throws IOException {
-        File export_file = new File("graphs\\" + counter + "\\PDG.graphml");
+    public static void exportPDG(Method method ,int counter) throws IOException {
+        PDG pdg = method.pdg;
+
+        File export_file = new File("graphs\\" + method.submission_name + "\\" + method.method_name + "\\PDG.graphml");
 
         export_file.getParentFile().mkdirs();
         export_file.createNewFile();

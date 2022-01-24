@@ -3,7 +3,6 @@ package plagiarism_graph_comparison;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.github.javaparser.ast.NodeList;

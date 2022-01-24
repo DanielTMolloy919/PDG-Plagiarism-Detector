@@ -8,6 +8,7 @@ import plagiarism_graph_comparison.CFG.StatementNotFoundException;
 
 public class Method {
     String file_name;
+    String submission_name;
     String method_name;
 
     static int counter; // How many objects this class has created - used for naming export files
@@ -22,40 +23,41 @@ public class Method {
 
     PDG pdg; // method's program dependency graph
 
-    GraphCompare graph_compare;
+    SubmissionCompare graph_compare;
 
-    public Method(MethodDeclaration method_node,String file_name) throws IOException, StatementNotFoundException {
-        this.file_name = file_name;
+    public Method(MethodDeclaration method_node,Submission submission) throws IOException, StatementNotFoundException {
+
+        
+        this.file_name = submission.md_to_file.get(method_node).getPath();
+        this.submission_name = submission.submission_name;
         this.method_name = method_node.getNameAsString();
 
         this.method_node = method_node;
 
-        Export.exporter(method_node, counter);
+        Export.exportMD(this, counter);
 
         this.statement_graph = new Blocks(method_node);
         
-        Export.exporter(statement_graph.statements, counter);
+        Export.exportStmts(this, counter);
 
         this.cfg = new CFG(statement_graph, counter);
 
-        Export.exporter(cfg, counter);
+        Export.exportCFG(this, counter);
 
         this.ddg = new DDG(statement_graph, counter, cfg);
 
-        Export.exporter(ddg, counter);
+        Export.exportDDG(this, counter);
 
         this.pdg = new PDG(ddg, counter);
 
-        Export.exporter(pdg.cdg, counter);
-        Export.exporter(pdg, counter);
-
-        this.graph_compare = new GraphCompare(pdg, pdg, counter);
+        Export.exportCDG(this, counter);
+        Export.exportPDG(this, counter);
 
         counter++;
     }
 
     @Override
     public String toString() {
-        return "Method \'" + method_name + "\' in file \'" + file_name + "\'";
+        return "Method \'" + method_name + "\' in file \'" + file_name + "\'\n";
     }
 }

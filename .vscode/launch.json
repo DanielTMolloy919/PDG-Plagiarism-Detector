@@ -6,6 +6,13 @@
     "configurations": [
         {
             "type": "java",
+            "name": "Launch Conformal",
+            "request": "launch",
+            "mainClass": "Conformal",
+            "projectName": "plagurism_graph_comparison"
+        },
+        {
+            "type": "java",
             "name": "Launch Current File",
             "request": "launch",
             "mainClass": "${file}"
@@ -16,7 +23,9 @@
             "request": "launch",
             "mainClass": "plagiarism_graph_comparison.PlagiarismDetector",
             "projectName": "plagurism_graph_comparison",
-            "args": ["test_files\\Entire Dataset Subset"]
+            "args": [
+                "test_files\\Entire Dataset Subset"
+            ]
         }
     ]
 }
