@@ -34,6 +34,7 @@ public class PlagiarismDetector implements Callable<Integer>{
         File[] files = path.toFile().listFiles();
 
         List<Submission> submissions = new ArrayList<>();
+        List<SubmissionCompare> submission_pairs = new ArrayList<>();
 
         for (File file : files) {
             try {
@@ -49,8 +50,14 @@ public class PlagiarismDetector implements Callable<Integer>{
 
         while (combinations.hasNext()) {
             final int[] combination = combinations.next();
-            SubmissionCompare submission_compare = new SubmissionCompare(submissions.get(combination[0]), submissions.get(combination[1]));
+            submission_pairs.add(new SubmissionCompare(submissions.get(combination[0]), submissions.get(combination[1])));
         }
+
+        for (SubmissionCompare pair : submission_pairs) {
+            System.out.println("Score for submission pair " + pair.sb1.submission_name + " and " + pair.sb2.submission_name + " is " + Double.toString(pair.score));
+        }
+
+
 
         return 0;
     }

@@ -21,9 +21,10 @@ import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.EdgeReversedGraph;
 
 public class DDG {
-    List<Statement> statements;
+    List<UniqueStatement> statements;
     List<BasicBlock> basic_blocks;
     LinkedHashMap<String, BasicBlock> Statement_id_to_BasicBlock;
+    LinkedHashMap<UniqueStatement, BasicBlock> Statement_to_BasicBlock;
     int counter;
     static int count = 0;
 
@@ -41,10 +42,9 @@ public class DDG {
         this.statements = blocks.statements;
         this.basic_blocks = blocks.blocks;
         this.Statement_id_to_BasicBlock = blocks.Statement_id_to_BasicBlock;
+        this.Statement_to_BasicBlock = blocks.Statement_to_BasicBlock;
         this.counter = counter;
         
-        // count++;
-        // System.out.println(count);
 
         node_graph = new DefaultDirectedGraph<>(DependencyEdge.class);
 
@@ -61,57 +61,58 @@ public class DDG {
         expressions = new ArrayList<UniqueExpression>();
         
         // get all statements that are expressions
-        for (int i = 0; i < statements.size(); i++) {
-            Statement statement = statements.get(i);
-            BasicBlock bb = Statement_id_to_BasicBlock.get(statement);
+        for (UniqueStatement unique_statement : statements) {
+                
+            Statement statement = unique_statement.statement;
+            BasicBlock bb = Statement_to_BasicBlock.get(unique_statement);
             UniqueExpression expression;
 
             if (statement.isExpressionStmt()) {
-                expression = new UniqueExpression(statement.asExpressionStmt().getExpression(),i);
-                expression_importer(expression, i,"expression");
+                expression = new UniqueExpression(statement.asExpressionStmt().getExpression(),bb);
+                expression_importer(expression, unique_statement,"expression");
             }
 
             else if (statement.isIfStmt()) {
-                expression = new UniqueExpression(statement.asIfStmt().getCondition(),i);
-                expression_importer(expression, i,"control");
+                expression = new UniqueExpression(statement.asIfStmt().getCondition(),bb);
+                expression_importer(expression, unique_statement,"control");
             }
 
             else if (statement.isDoStmt()) {
-                expression = new UniqueExpression(statement.asDoStmt().getCondition(),i);
-                expression_importer(expression, i,"control");
+                expression = new UniqueExpression(statement.asDoStmt().getCondition(),bb);
+                expression_importer(expression, unique_statement,"control");
             }
 
             else if (statement.isWhileStmt()) {
-                expression = new UniqueExpression(statement.asWhileStmt().getCondition(),i);
-                expression_importer(expression, i,"control");
+                expression = new UniqueExpression(statement.asWhileStmt().getCondition(),bb);
+                expression_importer(expression, unique_statement,"control");
             }
 
             else if (statement.isForEachStmt()) {
                 // expression = new UniqueExpression(statement.asForEachStmt().getIterable());
-                expression = new UniqueExpression(statement.asForEachStmt().getIterable(),i);
-                expression_importer(expression, i,"control");
-                expression = new UniqueExpression(statement.asForEachStmt().getVariable(),i);
-                expression_importer(expression, i,"control");
+                expression = new UniqueExpression(statement.asForEachStmt().getIterable(),bb);
+                expression_importer(expression, unique_statement,"control");
+                expression = new UniqueExpression(statement.asForEachStmt().getVariable(),bb);
+                expression_importer(expression, unique_statement,"control");
             }
 
             else if (statement.isForStmt()) {
                 List<Expression> expressions = statement.asForStmt().getInitialization();
                 for (Expression for_expression : expressions) {
-                    UniqueExpression unique_expression = new UniqueExpression(for_expression,i);
-                    expression_importer(unique_expression, i,"control");
+                    UniqueExpression unique_expression = new UniqueExpression(for_expression,bb);
+                    expression_importer(unique_expression, unique_statement,"control");
                 }
                 expressions = statement.asForStmt().getUpdate();
                 for (Expression for_expression : expressions) {
-                    UniqueExpression unique_expression = new UniqueExpression(for_expression,i);
-                    expression_importer(unique_expression, i,"control");
+                    UniqueExpression unique_expression = new UniqueExpression(for_expression,bb);
+                    expression_importer(unique_expression, unique_statement,"control");
                 }
             }
 
             else if (statement.isReturnStmt()) {
                 Optional<Expression> potential_expression = statement.asReturnStmt().getExpression();
                 if (potential_expression.isPresent()) {
-                    expression = new UniqueExpression(potential_expression.get(),i);
-                    expression_importer(expression, i,"return");
+                    expression = new UniqueExpression(potential_expression.get(),bb);
+                    expression_importer(expression, unique_statement,"return");
                 }
                 
             }
@@ -121,6 +122,7 @@ public class DDG {
         // ListIterator is used, since subexpressions need to be live added to the queue 
         for (int i = 0; i < expressions.size(); i++) {
         // for (ListIterator<UniqueExpression> iter = expressions.listIterator(); iter.hasNext();) {
+            
             UniqueExpression uexpression = expressions.get(i);
             Expression expression = uexpression.expression;
             BasicBlock bb = Expression_to_BasicBlock.get(uexpression);
@@ -197,6 +199,9 @@ public class DDG {
         // Export.exporter(reversed_cfg, counter);
 
         for (int j = 0; j < expressions.size(); j++) {
+            count++;
+            System.out.println(count);
+
             link_statement(Expression_to_BasicBlock.get(expressions.get(j)));
         }
 
@@ -208,9 +213,9 @@ public class DDG {
     // A small function that adds an expression thats been extracted from another expression to the iterable
     // This way the core variables are extracted
     public void add_to_queue(UniqueExpression parent_expression, Expression sub_expression) {
-        UniqueExpression unique_expression = new UniqueExpression(sub_expression, parent_expression.id);
+        UniqueExpression unique_expression = new UniqueExpression(sub_expression, parent_expression.bb);
         expressions.add(unique_expression);
-        Expression_to_BasicBlock.put(unique_expression, Statement_id_to_BasicBlock.get(Integer.toString(parent_expression.id)));
+        Expression_to_BasicBlock.put(unique_expression, parent_expression.bb);
         // if parent expression contains used/defined data, copy this over to the subexpression
         if (parent_expression.is_defined || parent_expression.is_used) {
             unique_expression.metadata(parent_expression.is_defined);
@@ -219,9 +224,9 @@ public class DDG {
 
     // Additional variable 'is_defined' remembers whether the expression is being used or defined. Useful for ','nameExpr' and similar
     public void add_to_queue(UniqueExpression parent_expression, Expression sub_expression, boolean is_defined) {
-        UniqueExpression unique_expression = new UniqueExpression(sub_expression, parent_expression.id);
+        UniqueExpression unique_expression = new UniqueExpression(sub_expression, parent_expression.bb);
         expressions.add(unique_expression);
-        Expression_to_BasicBlock.put(unique_expression, Statement_id_to_BasicBlock.get(Integer.toString(parent_expression.id)));
+        Expression_to_BasicBlock.put(unique_expression, parent_expression.bb);
 
         // if parent expression contains used/defined data, copy this over to the subexpression
         if (parent_expression.is_defined || parent_expression.is_used) {
@@ -232,8 +237,8 @@ public class DDG {
         }
     }
 
-    public void expression_importer(UniqueExpression expression, int i,String attribute) {
-        BasicBlock bb = Statement_id_to_BasicBlock.get(Integer.toString(i));
+    public void expression_importer(UniqueExpression expression,UniqueStatement unique_statement,String attribute) {
+        BasicBlock bb = Statement_to_BasicBlock.get(unique_statement);
         expressions.add(expression);
         Expression_to_BasicBlock.put(expression, bb); // makes sure the expression's associated statement can be found later on
         bb.add_attribute(attribute);
@@ -315,13 +320,13 @@ public class DDG {
 class UniqueExpression {
     Expression expression;
     String uid;
-    int id;
+    BasicBlock bb;
     boolean is_defined;
     boolean is_used;
 
-    public UniqueExpression(Expression expression, int id) {
+    public UniqueExpression(Expression expression, BasicBlock bb) {
         this.expression = expression;
-        this.id = id;
+        this.bb = bb;
         uid = UUID.randomUUID().toString();
     }
 

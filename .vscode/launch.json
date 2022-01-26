@@ -24,7 +24,7 @@
             "mainClass": "plagiarism_graph_comparison.PlagiarismDetector",
             "projectName": "plagurism_graph_comparison",
             "args": [
-                "test_files\\Entire Dataset Subset"
+                "test_files\\Entire Dataset"
             ]
         }
     ]

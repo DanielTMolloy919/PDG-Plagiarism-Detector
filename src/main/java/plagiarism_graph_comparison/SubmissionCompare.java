@@ -1,6 +1,7 @@
 package plagiarism_graph_comparison;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -8,37 +9,76 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import com.github.javaparser.ast.body.MethodDeclaration;
+
 import org.apache.commons.math3.util.CombinatoricsUtils;
+import org.checkerframework.checker.units.qual.m;
 import org.jgrapht.Graph;
 import org.jgrapht.alg.isomorphism.VF2SubgraphIsomorphismInspector;
 import org.jgrapht.graph.AsSubgraph;
+
+import javassist.compiler.ast.MethodDecl;
 
 public class SubmissionCompare {
     Comparator<BasicBlock> vertex_comparator;
     Comparator<DependencyEdge> edge_comparator;
 
+    Submission sb1;
+    Submission sb2;
+
     ArrayList<Method> sb1_methods;
     ArrayList<Method> sb2_methods;
 
+    double score;
+
+    ArrayList<ArrayList<Method>> plagiarized_pairs;
+
     public SubmissionCompare(Submission sb1, Submission sb2) throws IOException {
+        this.sb1 = sb1;
+        this.sb2 = sb2;
+
         sb1_methods = sb1.method_objects;
         sb2_methods = sb2.method_objects;
+
+        plagiarized_pairs = new ArrayList<>();
 
         for (Method method_1 : sb1_methods) {
             for (Method method_2 : sb2_methods) {
                 compare(method_1, method_2);
             }
         }
-        // Iterator<int[]> combinations = CombinatoricsUtils.combinationsIterator(sb1_methods.size(),sb2_methods.size());
-        // ArrayList<ArrayList<Method>> plagiarism_pairs = new ArrayList<ArrayList<Method>>();
 
-        // while (combinations.hasNext()) {
-        //     final int[] combination = combinations.next();
+        this.score = score();
+        
+    }
 
-        //     compare(sb1_methods.get(combination[0]),sb2_methods.get(combination[1]));
+    private double score() {
+        int total_nodes = 0;
 
-        //     itertools
-        // }
+        for (MethodDeclaration md : sb1.mds) {
+            total_nodes += sb1.method_node_count.get(md);
+        }
+
+        for (MethodDeclaration md : sb2.mds) {
+            total_nodes += sb2.method_node_count.get(md);
+        }
+
+        int plagiarized_nodes = 0;
+
+        ArrayList<Method> plagiarized_list = new ArrayList<>();
+
+        for (ArrayList<Method> pair : plagiarized_pairs) {
+            if (!plagiarized_list.contains(pair.get(0))) {
+                plagiarized_list.add(pair.get(0));
+                plagiarized_nodes += pair.get(0).node_count;
+            }
+            if (!plagiarized_list.contains(pair.get(1))) {
+                plagiarized_list.add(pair.get(1));
+                plagiarized_nodes += pair.get(1).node_count;
+            }
+        }
+
+        return (double) plagiarized_nodes/total_nodes;
     }
 
     private void compare(Method m1, Method m2) throws IOException {
@@ -57,6 +97,10 @@ public class SubmissionCompare {
 
         if (is_gamma_isomorphic(pdg1, pdg2)) {
             System.out.println("Potential Plagiarism between submissions " + m1.toString() + " and " + m2.toString());
+            ArrayList<Method> pair = new ArrayList<>();
+            pair.add(m1);
+            pair.add(m2);
+            plagiarized_pairs.add(pair);
         }
     }
 

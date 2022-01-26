@@ -12,20 +12,31 @@ import com.github.javaparser.ast.stmt.Statement;
 
 // All the basic blocks in a method
 public class Blocks {
-    List<Statement> statements;
+    List<UniqueStatement> statements;
     List<BasicBlock> blocks;
     MethodDeclaration method_node;
+    Method method;
 
     static int count = 0; // for debugging
     
     LinkedHashMap<String, BasicBlock> Statement_id_to_BasicBlock;
-    public Blocks(MethodDeclaration method_node) {
-        this.method_node = method_node;
+    LinkedHashMap<UniqueStatement, BasicBlock> Statement_to_BasicBlock;
 
-        statements = method_node.findAll(Statement.class); // load all the statements
+    public Blocks(Method method) {
+        this.method = method;
+        this.method_node = method.method_node;
+
+        List<Statement> method_statements = method_node.findAll(Statement.class);
+        statements = new ArrayList<>();
+
+        for (Statement statement : method_statements) {
+            UniqueStatement unique_statement = new UniqueStatement(statement);
+            statements.add(unique_statement);
+        }
 
         blocks = new ArrayList<>();
         Statement_id_to_BasicBlock = new LinkedHashMap<>();
+        Statement_to_BasicBlock = new LinkedHashMap<>();
 
         List<String> method_parameters = new ArrayList<>();
 
@@ -44,6 +55,7 @@ public class Blocks {
             bb = new BasicBlock(statements.get(i), i);
             blocks.add(bb);
             Statement_id_to_BasicBlock.put(Integer.toString(i), bb);
+            Statement_to_BasicBlock.put(statements.get(i), bb);
         }
     }
 }

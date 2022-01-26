@@ -13,7 +13,7 @@ import org.apache.commons.text.translate.LookupTranslator;
 
 public class BasicBlock {
     Integer id;
-    Statement statement;
+    UniqueStatement statement;
 
     // Support for special 'start' and 'end' CFG nodes
     boolean is_start;
@@ -26,7 +26,7 @@ public class BasicBlock {
     List<String> attributes;
     String type;
 
-    public BasicBlock(Statement statement, int id) {
+    public BasicBlock(UniqueStatement statement, int id) {
         this.statement = statement;
         this.id = id;
 
@@ -51,7 +51,7 @@ public class BasicBlock {
         }
     }
 
-    public Statement get_statement() {
+    public UniqueStatement get_statement() {
         return this.statement;
     }
 

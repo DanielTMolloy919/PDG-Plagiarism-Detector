@@ -37,7 +37,7 @@ public class Export {
 
     public static void exportStmts(Method method,int counter) throws IOException {
 
-        List<Statement> statements = method.statement_graph.statements;
+        List<UniqueStatement> statements = method.statement_graph.statements;
 
         File export_file = new File("graphs\\" + method.submission_name + "\\" + method.method_name + "\\statements.txt");
 
@@ -49,7 +49,7 @@ public class Export {
         String body = new String();
 
         for (int j = 0; j < statements.size(); j++) {
-            String lines_array[] = statements.get(j).toString().split("\n");
+            String lines_array[] = statements.get(j).statement.toString().split("\n");
             List<String> lines = Arrays.asList(lines_array);
 
             for (String line : lines_array) {
@@ -144,6 +144,38 @@ public class Export {
         export.exportGraph(ddg.node_graph, f);
     }
 
+    public static void exportPDG(Method method,int counter) throws IOException {
+
+        PDG pdg = method.pdg;
+
+        File export_file = new File("graphs\\" + method.submission_name + "\\" + method.method_name + "\\PDG.dot");
+
+        export_file.getParentFile().mkdirs();
+        export_file.createNewFile();
+
+        FileWriter f = new FileWriter(export_file);
+            
+        DOTExporter<BasicBlock, DependencyEdge> export = new DOTExporter<>(v -> v.toString());
+
+        export.exportGraph(pdg.node_graph, f);
+    }
+
+    public static void exportRawPDG(Method method,int counter) throws IOException {
+
+        PDG pdg = method.pdg;
+
+        File export_file = new File("graphs\\" + method.submission_name + "\\" + method.method_name + "\\PDG_Raw.dot");
+
+        export_file.getParentFile().mkdirs();
+        export_file.createNewFile();
+
+        FileWriter f = new FileWriter(export_file);
+            
+        DOTExporter<BasicBlock, DependencyEdge> export = new DOTExporter<>(v -> v.toString());
+
+        export.exportGraph(pdg.node_graph, f);
+    }
+
     // public static void exporter(DDG ddg ,int counter) throws IOException {
     //     File export_file = new File("graphs\\DDGs\\file" + counter + ".graphml");
 
@@ -159,22 +191,22 @@ public class Export {
     //     export.exportGraph(ddg.node_graph, f);
     // }
 
-    public static void exportPDG(Method method ,int counter) throws IOException {
-        PDG pdg = method.pdg;
+    // public static void exportPDG(Method method ,int counter) throws IOException {
+    //     PDG pdg = method.pdg;
 
-        File export_file = new File("graphs\\" + method.submission_name + "\\" + method.method_name + "\\PDG.graphml");
+    //     File export_file = new File("graphs\\" + method.submission_name + "\\" + method.method_name + "\\PDG.graphml");
 
-        export_file.getParentFile().mkdirs();
-        export_file.createNewFile();
+    //     export_file.getParentFile().mkdirs();
+    //     export_file.createNewFile();
 
-        FileWriter f = new FileWriter(export_file);
+    //     FileWriter f = new FileWriter(export_file);
             
-        GraphMLExporter<BasicBlock, DependencyEdge> export = new GraphMLExporter<>(v -> v.toString());
-        export.setExportEdgeLabels(true);
-        export.setExportVertexLabels(true);
+    //     GraphMLExporter<BasicBlock, DependencyEdge> export = new GraphMLExporter<>(v -> v.toString());
+    //     export.setExportEdgeLabels(true);
+    //     export.setExportVertexLabels(true);
 
-        export.exportGraph(pdg.node_graph, f);
-    }
+    //     export.exportGraph(pdg.node_graph, f);
+    // }
 
     public static void exporter(EdgeReversedGraph<BasicBlock, DefaultEdge> node_graph, int counter) throws IOException {
         File export_file = new File("graphs\\" + counter + "\\CFG-Reversed.dot");

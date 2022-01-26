@@ -43,9 +43,6 @@ public class CFG {
         this.Statement_id_to_BasicBlock = blocks.Statement_id_to_BasicBlock;
         this.counter = counter;
 
-        // count++;
-        // System.out.println(count);
-
         node_graph = new DefaultDirectedGraph<>(DefaultEdge.class);
 
         for (BasicBlock basicBlock : basic_blocks) {
@@ -186,11 +183,12 @@ public class CFG {
                 link(current_id, statement_to_id(statement.findAncestor(Statement.class).get()));
             }
 
-            else if (!statement_blacklist.contains(current_id)) { // if the statement isn't on the blacklist,
+            // else if (!statement_blacklist.contains(current_id)) { // if the statement isn't on the blacklist,
+            else {    
                 link(current_id, current_id + 1);
             }
 
-            // Export.exporter(this,counter);
+            // Export.exportCFG(blocks.method, counter);
 
             current_id++;
         }

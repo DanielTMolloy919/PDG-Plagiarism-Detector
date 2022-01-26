@@ -12,6 +12,8 @@ public class Method {
     String method_name;
 
     static int counter; // How many objects this class has created - used for naming export files
+
+    int node_count;
     
     MethodDeclaration method_node; // The method node given to the constructor when a new method object is created
 
@@ -36,7 +38,7 @@ public class Method {
 
         Export.exportMD(this, counter);
 
-        this.statement_graph = new Blocks(method_node);
+        this.statement_graph = new Blocks(this);
         
         Export.exportStmts(this, counter);
 
@@ -51,7 +53,13 @@ public class Method {
         this.pdg = new PDG(ddg, counter);
 
         Export.exportCDG(this, counter);
+        Export.exportRawPDG(this, counter);
+
+        pdg.remove_insignificant_edges();
+
         Export.exportPDG(this, counter);
+
+        this.node_count = this.pdg.node_graph.vertexSet().size();
 
         counter++;
     }

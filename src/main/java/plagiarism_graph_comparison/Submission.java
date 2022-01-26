@@ -32,7 +32,10 @@ public class Submission {
     ArrayList<Method> method_objects;
     List<CompilationUnit> compilations;
 
+    LinkedHashMap<MethodDeclaration,Integer> method_node_count;
+
     int counter;
+
 
     static int submission_count = 0;
     static int method_count = 0;
@@ -72,11 +75,14 @@ public class Submission {
 
         md_to_file = new LinkedHashMap<>();
 
+        method_node_count = new LinkedHashMap<>();
+
         for (CompilationUnit cp : compilations) {
             List<MethodDeclaration> methods = cp.findAll(MethodDeclaration.class);
             for (MethodDeclaration method : methods) {
                 md_to_file.put(method, cu_to_file.get(cp));
                 mds.add(method);
+                method_node_count.put(method, method.findAll(Statement.class).size());
             }
         }
         
@@ -105,6 +111,16 @@ public class Submission {
                 e.printStackTrace();
             }
         }); // create a method object for each node, which will build a pdg for each
+
+        ArrayList<Method> significant_methods = new ArrayList<>();
+
+        for (Method md : method_objects) {
+            if (md.pdg.node_graph.edgeSet().size() >= 20) {
+                significant_methods.add(md);
+            }
+        }
+
+        method_objects = significant_methods;
     }
 
     private void project_importer(SourceRoot source_root) {

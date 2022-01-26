@@ -2,10 +2,12 @@ package plagiarism_graph_comparison;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.github.javaparser.ast.stmt.Statement;
 
@@ -16,7 +18,7 @@ import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 
 public class PDG {
-    List<Statement> statements;
+    List<UniqueStatement> statements;
     List<BasicBlock> basic_blocks;
     LinkedHashMap<String, BasicBlock> Statement_id_to_BasicBlock;
     int counter;
@@ -115,6 +117,21 @@ public class PDG {
         for (BasicBlock child : direct_children) {
             node_graph.addEdge(Statement_id_to_BasicBlock.get("0"), child, new DependencyEdge("CD"));
             cdg.addEdge(Statement_id_to_BasicBlock.get("0"), child, new DependencyEdge("CD"));
+        }
+    }
+
+    public void remove_insignificant_edges() {
+        // remove insignificant nodes - no DDG connections and only one CDG connection
+        
+         Set<BasicBlock> pdg_vertexes = new HashSet<>();
+        
+         node_graph.vertexSet().stream().forEach(x -> pdg_vertexes.add(x));
+
+        for (BasicBlock vertex : pdg_vertexes) {
+            if ((node_graph.degreeOf(vertex) == 0 || node_graph.degreeOf(vertex) == 1) && vertex.id != 0) {
+                node_graph.removeVertex(vertex);
+                // node_graph.edgesOf(vertex).stream().forEach(x -> node_graph.removeEdge(x));
+            }
         }
     }
 
