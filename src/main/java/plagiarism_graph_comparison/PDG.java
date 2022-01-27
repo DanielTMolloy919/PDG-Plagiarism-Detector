@@ -28,7 +28,7 @@ public class PDG {
     static int count = 0; // for debugging
 
     CFG cfg;
-    Graph<BasicBlock, DependencyEdge> node_graph; // The method's program dependence graph
+    DefaultDirectedGraph<BasicBlock, DependencyEdge> node_graph; // The method's program dependence graph
     Graph<BasicBlock, DependencyEdge> cdg; // The method's control dependence subgraph, for demonstration
 
     LinkedHashMap<BasicBlock, BasicBlock> bb_ipdom;
@@ -250,5 +250,10 @@ public class PDG {
         }
 
         return true;
+    }
+
+    @Override
+    public String toString() {
+        return this.method.method_name + " (" + this.method.node_count + ")";
     }
 }

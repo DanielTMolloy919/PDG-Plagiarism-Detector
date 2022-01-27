@@ -31,7 +31,7 @@ public class DDG {
     CFG cfg;
     EdgeReversedGraph<BasicBlock,DefaultEdge> reversed_cfg;
 
-    Graph<BasicBlock, DependencyEdge> node_graph; // The method's data dependence graph
+    DefaultDirectedGraph<BasicBlock, DependencyEdge> node_graph; // The method's data dependence graph
 
     List<UniqueExpression> expressions;
     LinkedHashMap<UniqueExpression, BasicBlock> Expression_to_BasicBlock;

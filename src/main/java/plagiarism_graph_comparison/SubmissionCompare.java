@@ -15,6 +15,7 @@ import org.apache.commons.math3.util.CombinatoricsUtils;
 import org.jgrapht.Graph;
 import org.jgrapht.alg.isomorphism.VF2SubgraphIsomorphismInspector;
 import org.jgrapht.graph.AsSubgraph;
+import org.jgrapht.graph.DefaultDirectedGraph;
 
 
 public class SubmissionCompare {
@@ -117,22 +118,68 @@ public class SubmissionCompare {
         }
     }
 
+    // This is based on the paper 'GPLAG: detection of software plagiarism by program dependence graph analysis' by Liu et al. 2006
     private boolean is_gamma_isomorphic(PDG pdg1, PDG pdg2) {
+        
         double gamma = 0.9;
 
+        // step one - does a theoretical 'S' have more than gamma * G' nodes
+        // the largest subgraph 'S' would be the whole graph G, therefore thats our maximum scenario
+
+        Set<BasicBlock> pdg1_set = pdg2.node_graph.vertexSet();
         Set<BasicBlock> pdg2_set = pdg2.node_graph.vertexSet();
+
+        if (pdg1_set.size() < Math.round(gamma * pdg2_set.size())) {
+            return false;
+        }
+        
+        // step two - does an isomorphism exist between an 'S' and an equivalent sized 'T'
+        
+        // part one - get all combinations of G with nodes larger than gamma * G'
+
+        List<BasicBlock> pdg1_list = new ArrayList<>(pdg1_set);
+        // List<BasicBlock> pdg2_list = new ArrayList<>(pdg2_set);
+
+        Iterator<int[]> pdg1_combinations = CombinatoricsUtils.combinationsIterator(pdg1_set.size(), (int) Math.round(gamma * pdg2_set.size()));
+        
+        // part two - for each 'S', is it subgraph isomorphic to G'?
+
+        // telling the program to find identical nodes based on class attribute 'type', and identical edges based on whether its a dependency or control edge
+        vertex_comparator = (BasicBlock left, BasicBlock right) -> comparator_proxy(right, left);
+        edge_comparator = (DependencyEdge left, DependencyEdge right) -> comparator_proxy(right, left);
+
+        int iterator_count = 0;
+
+        // while (pdg1_combinations.hasNext()) {
+        //     // final int[] pdg1_combination = pdg1_combinations.next();
+        //     Set<BasicBlock> subgraph_S_vertexes = new HashSet<BasicBlock>();
+
+        //     subgraph_S_vertexes.addAll(pdg1_set);
+
+        //     // // load 'S' nodes from combination
+        //     // for (int i : pdg1_combination) {
+        //     //     subgraph_S_vertexes.add(pdg1_list.get(i));
+        //     // }
+
+        //     subgraph_S_vertexes.removeIf(x -> x.id != 2);
+
+        //     // build a 'S' subgraph
+        //     AsSubgraph<BasicBlock, DependencyEdge> subgraph_S = new AsSubgraph<BasicBlock, DependencyEdge>(pdg1.node_graph, subgraph_S_vertexes);
+        //     // Export.exporter(subgraph, counter, iterator_count);
+        //     // System.out.println(iterator_count);
+
+        //     if (is_subgraph_isomorphic(subgraph_S, pdg2.node_graph)) {
+        //         // System.out.println("Isomorphism Detected");
+        //         return true;
+        //     }
+
+        //     iterator_count++;
+        // }
+
         List<BasicBlock> pdg2_list = new ArrayList<>(pdg2_set);
 
         Iterator<int[]> combinations = CombinatoricsUtils.combinationsIterator(pdg2_set.size(),
                 (int) Math.round(gamma * pdg2_set.size()));
-
-        int iterator_count = 0;
-        
-        // vertex_comparator = new VertexComparator();
-        // edge_comparator = new EdgeComparator();
-
-        vertex_comparator = (BasicBlock left, BasicBlock right) -> comparator_proxy(right, left);
-        edge_comparator = (DependencyEdge left, DependencyEdge right) -> comparator_proxy(right, left);
 
         while (combinations.hasNext()) {
             final int[] combination = combinations.next();
@@ -143,13 +190,6 @@ public class SubmissionCompare {
             }
 
             AsSubgraph<BasicBlock, DependencyEdge> subgraph = new AsSubgraph<>(pdg2.node_graph, subgraph_vertexes);
-            // Export.exporter(subgraph, counter, iterator_count);
-            // System.out.println(iterator_count);
-
-            if (is_isomorphic(pdg1.node_graph, subgraph)) {
-                // System.out.println("Isomorphism Detected");
-                return true;
-            }
 
             iterator_count++;
         }
@@ -157,9 +197,9 @@ public class SubmissionCompare {
         return false;
     }
 
-    private boolean is_isomorphic(Graph<BasicBlock, DependencyEdge> node_graph, AsSubgraph<BasicBlock, DependencyEdge> pdg2) {
+    private boolean is_subgraph_isomorphic(AsSubgraph<BasicBlock, DependencyEdge> subgraph_S, DefaultDirectedGraph<BasicBlock, DependencyEdge> Graph_G_prime) {
 
-        VF2SubgraphIsomorphismInspector<BasicBlock,DependencyEdge> iso_inspector = new VF2SubgraphIsomorphismInspector<>(pdg2,pdg2,vertex_comparator,edge_comparator);
+        VF2SubgraphIsomorphismInspector<BasicBlock,DependencyEdge> iso_inspector = new VF2SubgraphIsomorphismInspector<>(subgraph_S,Graph_G_prime,vertex_comparator,edge_comparator);
         // VF2SubgraphIsomorphismInspector<BasicBlock,DependencyEdge> iso_inspector = new VF2SubgraphIsomorphismInspector<>(pdg2,pdg2);
 
         return iso_inspector.isomorphismExists();
