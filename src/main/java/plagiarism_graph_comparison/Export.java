@@ -17,7 +17,12 @@ import org.jgrapht.nio.dot.DOTExporter;
 import org.jgrapht.nio.graphml.GraphMLExporter;
 
 public class Export {
+
+    static boolean debugging = true; // toggles all graph exports - 
+
     public static void exportMD(Method method,int counter) throws IOException {
+
+        if (!debugging) return;
 
         MethodDeclaration method_node = method.method_node;
 
@@ -36,6 +41,8 @@ public class Export {
     }
 
     public static void exportStmts(Method method,int counter) throws IOException {
+
+        if (!debugging) return;
 
         List<UniqueStatement> statements = method.statement_graph.statements;
 
@@ -68,6 +75,9 @@ public class Export {
     }
 
     public static void exportCFG(Method method,int counter) throws IOException {
+
+        if (!debugging) return;
+
         CFG cfg = method.cfg;
 
         File export_file = new File("graphs\\" + method.submission_name + "\\" + method.method_name + "\\CFG.dot");
@@ -83,6 +93,8 @@ public class Export {
     }
 
     public static void exportCDG(Method method,int counter) throws IOException {
+
+        if (!debugging) return;
 
         Graph<BasicBlock, DependencyEdge> cdg = method.pdg.cdg;
 
@@ -130,6 +142,8 @@ public class Export {
 
     public static void exportDDG(Method method,int counter) throws IOException {
 
+        if (!debugging) return;
+
         DDG ddg = method.ddg;
 
         File export_file = new File("graphs\\" + method.submission_name + "\\" + method.method_name + "\\DDG.dot");
@@ -146,6 +160,8 @@ public class Export {
 
     public static void exportPDG(Method method,int counter) throws IOException {
 
+        if (!debugging) return;
+
         PDG pdg = method.pdg;
 
         File export_file = new File("graphs\\" + method.submission_name + "\\" + method.method_name + "\\PDG.dot");
@@ -161,6 +177,8 @@ public class Export {
     }
 
     public static void exportRawPDG(Method method,int counter) throws IOException {
+
+        if (!debugging) return;
 
         PDG pdg = method.pdg;
 
@@ -209,9 +227,10 @@ public class Export {
     // }
 
     public static void exporter(EdgeReversedGraph<BasicBlock, DefaultEdge> node_graph, int counter) throws IOException {
-        File export_file = new File("graphs\\" + counter + "\\CFG-Reversed.dot");
 
-        
+        if (!debugging) return;
+
+        File export_file = new File("graphs\\" + counter + "\\CFG-Reversed.dot");        
 
         export_file.getParentFile().mkdirs();
         export_file.createNewFile();

@@ -12,7 +12,7 @@ public class Method {
     String method_name;
 
     static int counter; // How many objects this class has created - used for naming export files
-
+    
     int node_count;
     
     MethodDeclaration method_node; // The method node given to the constructor when a new method object is created
@@ -29,6 +29,7 @@ public class Method {
 
     public Method(MethodDeclaration method_node,Submission submission) throws IOException, StatementNotFoundException {
 
+        System.out.println(counter);
         
         this.file_name = submission.md_to_file.get(method_node).getPath();
         this.submission_name = submission.submission_name;
@@ -50,7 +51,7 @@ public class Method {
 
         Export.exportDDG(this, counter);
 
-        this.pdg = new PDG(ddg, counter);
+        this.pdg = new PDG(this, counter);
 
         Export.exportCDG(this, counter);
         Export.exportRawPDG(this, counter);

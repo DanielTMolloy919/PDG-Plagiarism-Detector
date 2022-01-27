@@ -17,7 +17,7 @@ import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 
 public class CFG {
-    List<Statement> statements;
+    List<UniqueStatement> statements;
     List<BasicBlock> basic_blocks;
     LinkedHashMap<String, BasicBlock> Statement_id_to_BasicBlock;
     int counter;
@@ -83,7 +83,7 @@ public class CFG {
 
         for (int i = 0; i < statements.size() - 1; i++) { // loop through each statement
 
-            Statement statement = statements.get(current_id);
+            Statement statement = statements.get(current_id).statement;
 
             // if its an 'If' statement
             if (statement.isIfStmt()) {
@@ -239,7 +239,7 @@ public class CFG {
 
     private int statement_to_id(Statement statement) throws StatementNotFoundException {
         OptionalInt statement_position = IntStream.range(0, statements.size())
-                .filter(id -> statements.get(id).equals(statement))
+                .filter(id -> statements.get(id).statement.equals(statement))
                 .findFirst();
 
         if (statement_position.isPresent()) {
@@ -252,7 +252,7 @@ public class CFG {
     }
 
     private int get_last_child(int id) {
-        List<Statement> children = statements.get(id).findAll(Statement.class);
+        List<Statement> children = statements.get(id).statement.findAll(Statement.class);
 
         return id + children.size() - 1;
     }
@@ -264,8 +264,8 @@ public class CFG {
     }
 
     private int get_subsequent_sibling(int id) {
-        original_statement = statements.get(id);
-        List<Statement> children = statements.get(id).findAll(Statement.class);
+        original_statement = statements.get(id).statement;
+        List<Statement> children = statements.get(id).statement.findAll(Statement.class);
 
         test_id = id;
 
@@ -274,7 +274,7 @@ public class CFG {
             // for each node in the sequence after id, if it can't be found in the children
             // list, it must be the next sibling. Therefore return it
             if (!children.stream()
-                    .filter(child -> child.equals(statements.get(test_id)))
+                    .filter(child -> child.equals(statements.get(test_id).statement))
                     .findFirst()
                     .isPresent()) {
                 return test_id;
@@ -290,7 +290,7 @@ public class CFG {
     }
 
     private boolean is_statement_special(int id) {
-        Statement statement = statements.get(id);
+        Statement statement = statements.get(id).statement;
 
         return statement.isBreakStmt() || statement.isContinueStmt() || statement.isDoStmt()
                 || statement.isForEachStmt() || statement.isForStmt() || statement.isIfStmt()

@@ -23,6 +23,8 @@ public class PDG {
     LinkedHashMap<String, BasicBlock> Statement_id_to_BasicBlock;
     int counter;
 
+    Method method;
+
     static int count = 0; // for debugging
 
     CFG cfg;
@@ -37,17 +39,18 @@ public class PDG {
 
     List<GraphPath<BasicBlock, DefaultEdge>> pdom_paths;
 
-    public PDG(DDG ddg, int counter) throws IOException {
-        this.statements = ddg.statements;
-        this.basic_blocks = ddg.basic_blocks;
-        this.Statement_id_to_BasicBlock = ddg.Statement_id_to_BasicBlock;
+    public PDG(Method method, int counter) throws IOException {
+        this.statements = method.ddg.statements;
+        this.basic_blocks = method.ddg.basic_blocks;
+        this.Statement_id_to_BasicBlock = method.ddg.Statement_id_to_BasicBlock;
         this.counter = counter;
         
-        this.cfg = ddg.cfg;
-        this.node_graph = ddg.node_graph;
+        this.cfg = method.cfg;
+        this.node_graph = method.ddg.node_graph;
+        this.method = method;
 
-        count++;
-        System.out.println(count);
+        // count++;
+        // System.out.println(count);
 
         bb_ipdom = new LinkedHashMap<>(); // contains the immediate post dominator for each statement
         edge_map = new LinkedHashMap<>();

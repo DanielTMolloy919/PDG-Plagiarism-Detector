@@ -199,8 +199,8 @@ public class DDG {
         // Export.exporter(reversed_cfg, counter);
 
         for (int j = 0; j < expressions.size(); j++) {
-            count++;
-            System.out.println(count);
+            // count++;
+            // System.out.println(count);
 
             link_statement(Expression_to_BasicBlock.get(expressions.get(j)));
         }

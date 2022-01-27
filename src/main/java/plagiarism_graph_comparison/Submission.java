@@ -36,7 +36,6 @@ public class Submission {
 
     int counter;
 
-
     static int submission_count = 0;
     static int method_count = 0;
 
@@ -93,7 +92,7 @@ public class Submission {
         method_count += mds.size();
 
 
-        // remove methods with less than 5 statements from the list
+        // remove methods with less than 10 statements from the list
         for (MethodDeclaration method_node : mds) {
             if (method_node.findAll(Statement.class).size() <= 10) {
                 significant_mds.remove(method_node);
@@ -120,7 +119,7 @@ public class Submission {
             }
         }
 
-        method_objects = significant_methods;
+        // method_objects = significant_methods;
     }
 
     private void project_importer(SourceRoot source_root) {

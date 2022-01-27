@@ -27,7 +27,9 @@ public class PlagiarismDetector implements Callable<Integer>{
     private Path path;
 
     @Override
-    public Integer call() throws Exception { // your business logic goes here...
+    public Integer call() throws Exception {
+
+        long start = System.currentTimeMillis();
         
         ProjectRoot projectRoot = new ParserCollectionStrategy().collect(path);
 
@@ -57,7 +59,8 @@ public class PlagiarismDetector implements Callable<Integer>{
             System.out.println("Score for submission pair " + pair.sb1.submission_name + " and " + pair.sb2.submission_name + " is " + Double.toString(pair.score));
         }
 
-
+        long end = System.currentTimeMillis(); 
+        System.out.println("Elapsed Time in milli seconds: "+ (end-start));
 
         return 0;
     }

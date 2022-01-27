@@ -12,12 +12,10 @@ import java.util.Set;
 import com.github.javaparser.ast.body.MethodDeclaration;
 
 import org.apache.commons.math3.util.CombinatoricsUtils;
-import org.checkerframework.checker.units.qual.m;
 import org.jgrapht.Graph;
 import org.jgrapht.alg.isomorphism.VF2SubgraphIsomorphismInspector;
 import org.jgrapht.graph.AsSubgraph;
 
-import javassist.compiler.ast.MethodDecl;
 
 public class SubmissionCompare {
     Comparator<BasicBlock> vertex_comparator;
@@ -78,6 +76,21 @@ public class SubmissionCompare {
             }
         }
 
+        final Object[][] table = new String[plagiarized_pairs.size() + 2][];
+        table[0] = new String[] { "Submission " + sb1.submission_name, "", "Submission " + sb2.submission_name};
+        table[1] = new String[] { "---------", "---------", "---------"};
+
+        for (int i = 0; i < plagiarized_pairs.size(); i++) {
+            Method m1 = plagiarized_pairs.get(i).get(0);
+            Method m2 =plagiarized_pairs.get(i).get(1);
+            table[i+2] = new String[] { m1.method_name + " (" + m1.node_count + ")", "<------->", m2.method_name+ " (" + m2.node_count + ")"};
+        }
+
+        for (final Object[] row : table) {
+            System.out.format("%-15s%-15s%-15s%n", row);
+        }
+        System.out.println("\n\n");
+
         return (double) plagiarized_nodes/total_nodes;
     }
 
@@ -96,7 +109,7 @@ public class SubmissionCompare {
         }
 
         if (is_gamma_isomorphic(pdg1, pdg2)) {
-            System.out.println("Potential Plagiarism between submissions " + m1.toString() + " and " + m2.toString());
+            // System.out.println("Potential Plagiarism between submissions " + m1.toString() + " and " + m2.toString());
             ArrayList<Method> pair = new ArrayList<>();
             pair.add(m1);
             pair.add(m2);
