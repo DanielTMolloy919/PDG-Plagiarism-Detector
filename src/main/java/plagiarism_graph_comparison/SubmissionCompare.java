@@ -126,7 +126,7 @@ public class SubmissionCompare {
         // step one - does a theoretical 'S' have more than gamma * G' nodes
         // the largest subgraph 'S' would be the whole graph G, therefore thats our maximum scenario
 
-        Set<BasicBlock> pdg1_set = pdg2.node_graph.vertexSet();
+        Set<BasicBlock> pdg1_set = pdg1.node_graph.vertexSet();
         Set<BasicBlock> pdg2_set = pdg2.node_graph.vertexSet();
 
         if (pdg1_set.size() < Math.round(gamma * pdg2_set.size())) {
@@ -137,7 +137,7 @@ public class SubmissionCompare {
         
         // part one - get all combinations of G with nodes larger than gamma * G'
 
-        List<BasicBlock> pdg1_list = new ArrayList<>(pdg1_set);
+        // List<BasicBlock> pdg1_list = new ArrayList<>(pdg1_set);
         // List<BasicBlock> pdg2_list = new ArrayList<>(pdg2_set);
 
         Iterator<int[]> pdg1_combinations = CombinatoricsUtils.combinationsIterator(pdg1_set.size(), (int) Math.round(gamma * pdg2_set.size()));
@@ -176,7 +176,7 @@ public class SubmissionCompare {
         //     iterator_count++;
         // }
 
-        List<BasicBlock> pdg2_list = new ArrayList<>(pdg2_set);
+        List<BasicBlock> pdg1_list = new ArrayList<>(pdg1_set);
 
         Iterator<int[]> combinations = CombinatoricsUtils.combinationsIterator(pdg1_set.size(),
                 (int) Math.round(gamma * pdg1_set.size()));
@@ -186,10 +186,21 @@ public class SubmissionCompare {
             Set<BasicBlock> subgraph_vertexes = new HashSet<BasicBlock>();
 
             for (int i : combination) {
-                subgraph_vertexes.add(pdg2_list.get(i));
+                subgraph_vertexes.add(pdg1_list.get(i));
             }
 
-            AsSubgraph<BasicBlock, DependencyEdge> subgraph = new AsSubgraph<>(pdg2.node_graph, subgraph_vertexes);
+            AsSubgraph<BasicBlock, DependencyEdge> subgraph = new AsSubgraph<>(pdg1.node_graph, subgraph_vertexes);
+            
+            for (BasicBlock basicBlock : subgraph_vertexes) {
+                if (!pdg1.node_graph.containsVertex(basicBlock)) {
+                    System.out.println(basicBlock);
+                }
+            }
+
+            if (is_subgraph_isomorphic(subgraph, pdg2.node_graph)) {
+                    // System.out.println("Isomorphism Detected");
+                    return true;
+                }
 
             iterator_count++;
         }

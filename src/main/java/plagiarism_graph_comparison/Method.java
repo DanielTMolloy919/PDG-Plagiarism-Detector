@@ -29,7 +29,7 @@ public class Method {
 
     public Method(MethodDeclaration method_node,Submission submission) throws IOException, StatementNotFoundException {
 
-        System.out.println(counter);
+        // System.out.println(counter);
         
         this.file_name = submission.md_to_file.get(method_node).getPath();
         this.submission_name = submission.submission_name;
