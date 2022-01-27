@@ -151,17 +151,17 @@ public class SubmissionCompare {
         int iterator_count = 0;
 
         // while (pdg1_combinations.hasNext()) {
-        //     // final int[] pdg1_combination = pdg1_combinations.next();
+        //     final int[] pdg1_combination = pdg1_combinations.next();
         //     Set<BasicBlock> subgraph_S_vertexes = new HashSet<BasicBlock>();
 
-        //     subgraph_S_vertexes.addAll(pdg1_set);
+        //     // subgraph_S_vertexes.addAll(pdg1_set);
 
-        //     // // load 'S' nodes from combination
-        //     // for (int i : pdg1_combination) {
-        //     //     subgraph_S_vertexes.add(pdg1_list.get(i));
-        //     // }
+        //     // load 'S' nodes from combination
+        //     for (int i : pdg1_combination) {
+        //         subgraph_S_vertexes.add(pdg1_list.get(i));
+        //     }
 
-        //     subgraph_S_vertexes.removeIf(x -> x.id != 2);
+        //     // subgraph_S_vertexes.removeIf(x -> x.id != 2);
 
         //     // build a 'S' subgraph
         //     AsSubgraph<BasicBlock, DependencyEdge> subgraph_S = new AsSubgraph<BasicBlock, DependencyEdge>(pdg1.node_graph, subgraph_S_vertexes);
@@ -178,8 +178,8 @@ public class SubmissionCompare {
 
         List<BasicBlock> pdg2_list = new ArrayList<>(pdg2_set);
 
-        Iterator<int[]> combinations = CombinatoricsUtils.combinationsIterator(pdg2_set.size(),
-                (int) Math.round(gamma * pdg2_set.size()));
+        Iterator<int[]> combinations = CombinatoricsUtils.combinationsIterator(pdg1_set.size(),
+                (int) Math.round(gamma * pdg1_set.size()));
 
         while (combinations.hasNext()) {
             final int[] combination = combinations.next();
