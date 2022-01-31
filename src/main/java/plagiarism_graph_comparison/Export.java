@@ -18,7 +18,7 @@ import org.jgrapht.nio.graphml.GraphMLExporter;
 
 public class Export {
 
-    static boolean debugging = true; // toggles all graph exports - 
+    static boolean debugging = false; // toggles all graph exports - 
 
     public static void exportMD(Method method,int counter) throws IOException {
 

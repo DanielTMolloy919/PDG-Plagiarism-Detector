@@ -18,8 +18,6 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.Parameters;
 import plagiarism_graph_comparison.CFG.StatementNotFoundException;
 
-
-
 @Command(name = "PlagiarismDetector")
 public class PlagiarismDetector implements Callable<Integer>{
 

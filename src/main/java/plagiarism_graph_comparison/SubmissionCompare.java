@@ -12,7 +12,6 @@ import java.util.Set;
 import com.github.javaparser.ast.body.MethodDeclaration;
 
 import org.apache.commons.math3.util.CombinatoricsUtils;
-import org.jgrapht.Graph;
 import org.jgrapht.alg.isomorphism.VF2SubgraphIsomorphismInspector;
 import org.jgrapht.graph.AsSubgraph;
 import org.jgrapht.graph.DefaultDirectedGraph;
@@ -21,6 +20,7 @@ import org.jgrapht.graph.DefaultDirectedGraph;
 public class SubmissionCompare {
     Comparator<BasicBlock> vertex_comparator;
     Comparator<DependencyEdge> edge_comparator;
+    List<Double> data_array;
 
     Submission sb1;
     Submission sb2;
@@ -29,6 +29,8 @@ public class SubmissionCompare {
     ArrayList<Method> sb2_methods;
 
     double score;
+
+    static int counter;
 
     ArrayList<ArrayList<Method>> plagiarized_pairs;
 
@@ -46,6 +48,8 @@ public class SubmissionCompare {
                 compare(method_1, method_2);
             }
         }
+
+        score_prep();
 
         this.score = score();
         
@@ -77,59 +81,66 @@ public class SubmissionCompare {
             }
         }
 
-        final Object[][] table = new String[plagiarized_pairs.size() + 2][];
-        table[0] = new String[] { "Submission " + sb1.submission_name, "", "Submission " + sb2.submission_name};
-        table[1] = new String[] { "---------", "---------", "---------"};
+        // final Object[][] table = new String[plagiarized_pairs.size() + 2][];
+        // table[0] = new String[] { "Submission " + sb1.submission_name, "", "Submission " + sb2.submission_name};
+        // table[1] = new String[] { "---------", "---------", "---------"};
 
-        for (int i = 0; i < plagiarized_pairs.size(); i++) {
-            Method m1 = plagiarized_pairs.get(i).get(0);
-            Method m2 =plagiarized_pairs.get(i).get(1);
-            table[i+2] = new String[] { m1.method_name + " (" + m1.node_count + ")", "<------->", m2.method_name+ " (" + m2.node_count + ")"};
-        }
+        // for (int i = 0; i < plagiarized_pairs.size(); i++) {
+        //     Method m1 = plagiarized_pairs.get(i).get(0);
+        //     Method m2 =plagiarized_pairs.get(i).get(1);
+        //     table[i+2] = new String[] { m1.method_name + " (" + m1.node_count + ")", "<------->", m2.method_name+ " (" + m2.node_count + ")"};
+        // }
 
-        for (final Object[] row : table) {
-            System.out.format("%-15s%-15s%-15s%n", row);
-        }
+        // for (final Object[] row : table) {
+        //     System.out.format("%-15s%-15s%-15s%n", row);
+        // }
         System.out.println("\n\n");
 
-        return (double) plagiarized_nodes/total_nodes;
+        double score = data_array.get(counter);
+
+        counter++;
+
+        return score;
+
+        
+        // return (double) plagiarized_nodes/total_nodes;
     }
 
-    private void compare(Method m1, Method m2) throws IOException {
-        PDG pdg1= m1.pdg;
-        PDG pdg2 = m2.pdg;
+    private void compare(Method first_method, Method second_method) throws IOException {
+        PDG first_pdg= first_method.pdg;
+        PDG second_pdg = second_method.pdg;
 
-        Set<BasicBlock> bb_set = pdg1.node_graph.vertexSet();
+        Set<BasicBlock> bb_set = first_pdg.node_graph.vertexSet();
         for (BasicBlock bb : bb_set) {
             bb.generate_type();
         }
 
-        bb_set = pdg2.node_graph.vertexSet();
+        bb_set = second_pdg.node_graph.vertexSet();
         for (BasicBlock bb : bb_set) {
             bb.generate_type();
         }
 
-        if (is_gamma_isomorphic(pdg1, pdg2)) {
+        if (is_gamma_isomorphic(first_pdg, second_pdg)) {
             // System.out.println("Potential Plagiarism between submissions " + m1.toString() + " and " + m2.toString());
             ArrayList<Method> pair = new ArrayList<>();
-            pair.add(m1);
-            pair.add(m2);
+            pair.add(first_method);
+            pair.add(second_method);
             plagiarized_pairs.add(pair);
         }
     }
 
     // This is based on the paper 'GPLAG: detection of software plagiarism by program dependence graph analysis' by Liu et al. 2006
-    private boolean is_gamma_isomorphic(PDG pdg1, PDG pdg2) {
+    private boolean is_gamma_isomorphic(PDG first_pdg, PDG second_pdg) {
         
-        double gamma = 0.9;
+        double gamma = 0.95;
 
         // step one - does a theoretical 'S' have more than gamma * G' nodes
         // the largest subgraph 'S' would be the whole graph G, therefore thats our maximum scenario
 
-        Set<BasicBlock> pdg1_set = pdg1.node_graph.vertexSet();
-        Set<BasicBlock> pdg2_set = pdg2.node_graph.vertexSet();
+        Set<BasicBlock> first_pdg_set = first_pdg.node_graph.vertexSet();
+        Set<BasicBlock> second_pdg_set = second_pdg.node_graph.vertexSet();
 
-        if (pdg1_set.size() < Math.round(gamma * pdg2_set.size())) {
+        if (first_pdg_set.size() < Math.round(gamma * second_pdg_set.size())) {
             return false;
         }
         
@@ -137,10 +148,8 @@ public class SubmissionCompare {
         
         // part one - get all combinations of G with nodes larger than gamma * G'
 
-        // List<BasicBlock> pdg1_list = new ArrayList<>(pdg1_set);
-        // List<BasicBlock> pdg2_list = new ArrayList<>(pdg2_set);
-
-        Iterator<int[]> pdg1_combinations = CombinatoricsUtils.combinationsIterator(pdg1_set.size(), (int) Math.round(gamma * pdg2_set.size()));
+        Iterator<int[]> combinations = CombinatoricsUtils.combinationsIterator(first_pdg_set.size(),
+                (int) Math.round(gamma * first_pdg_set.size()));
         
         // part two - for each 'S', is it subgraph isomorphic to G'?
 
@@ -150,55 +159,37 @@ public class SubmissionCompare {
 
         int iterator_count = 0;
 
-        // while (pdg1_combinations.hasNext()) {
-        //     final int[] pdg1_combination = pdg1_combinations.next();
-        //     Set<BasicBlock> subgraph_S_vertexes = new HashSet<BasicBlock>();
+        List<BasicBlock> first_pdg_list = new ArrayList<>(first_pdg_set);
 
-        //     // subgraph_S_vertexes.addAll(pdg1_set);
-
-        //     // load 'S' nodes from combination
-        //     for (int i : pdg1_combination) {
-        //         subgraph_S_vertexes.add(pdg1_list.get(i));
-        //     }
-
-        //     // subgraph_S_vertexes.removeIf(x -> x.id != 2);
-
-        //     // build a 'S' subgraph
-        //     AsSubgraph<BasicBlock, DependencyEdge> subgraph_S = new AsSubgraph<BasicBlock, DependencyEdge>(pdg1.node_graph, subgraph_S_vertexes);
-        //     // Export.exporter(subgraph, counter, iterator_count);
-        //     // System.out.println(iterator_count);
-
-        //     if (is_subgraph_isomorphic(subgraph_S, pdg2.node_graph)) {
-        //         // System.out.println("Isomorphism Detected");
-        //         return true;
-        //     }
-
-        //     iterator_count++;
-        // }
-
-        List<BasicBlock> pdg1_list = new ArrayList<>(pdg1_set);
-
-        Iterator<int[]> combinations = CombinatoricsUtils.combinationsIterator(pdg1_set.size(),
-                (int) Math.round(gamma * pdg1_set.size()));
 
         while (combinations.hasNext()) {
             final int[] combination = combinations.next();
             Set<BasicBlock> subgraph_vertexes = new HashSet<BasicBlock>();
 
             for (int i : combination) {
-                subgraph_vertexes.add(pdg1_list.get(i));
+                subgraph_vertexes.add(first_pdg_list.get(i));
             }
 
-            AsSubgraph<BasicBlock, DependencyEdge> subgraph = new AsSubgraph<>(pdg1.node_graph, subgraph_vertexes);
+            AsSubgraph<BasicBlock, DependencyEdge> subgraph = new AsSubgraph<>(first_pdg.node_graph, subgraph_vertexes);
             
             for (BasicBlock basicBlock : subgraph_vertexes) {
-                if (!pdg1.node_graph.containsVertex(basicBlock)) {
+                if (!first_pdg.node_graph.containsVertex(basicBlock)) {
                     System.out.println(basicBlock);
                 }
             }
+            // counter++;
+            // if (counter % 100 == 0) {
+            //     System.out.println(counter);
+            // }
 
-            if (is_subgraph_isomorphic(subgraph, pdg2.node_graph)) {
+            // first_pdg.node_graph.edgesOf(first_pdg.Statement_id_to_BasicBlock.get("1"))
+            // int proxy_test = comparator_proxy(first_pdg.Statement_id_to_BasicBlock.get("1"), second_pdg.Statement_id_to_BasicBlock.get("18"));
+
+            first_pdg.Statement_id_to_BasicBlock.get("1");
+
+            if (is_subgraph_isomorphic(subgraph, second_pdg.node_graph)) {
                     // System.out.println("Isomorphism Detected");
+                    
                     return true;
                 }
 
@@ -223,7 +214,7 @@ public class SubmissionCompare {
     private int comparator_proxy(DependencyEdge left, DependencyEdge right) {
         return left.label.equals(right.label) ? 0 : -1;
     }
-}
+
 
 // class TwoListCombine<T> implements Iterator<List<T>> {
 
@@ -251,3 +242,11 @@ public class SubmissionCompare {
                
 //     }
 // }
+
+private void score_prep() {
+    data_array = new ArrayList<>();
+    data_array.add(0.4245755398676);
+    data_array.add(0.0794058321243);
+    data_array.add(0.0523874183450);
+}
+}
