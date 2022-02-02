@@ -12,6 +12,8 @@ public class Method {
     String method_name;
 
     static int counter; // How many objects this class has created - used for naming export files
+    static boolean remove_insignificant_edges;
+
     
     int node_count;
     
@@ -56,7 +58,9 @@ public class Method {
         Export.exportCDG(this, counter);
         Export.exportRawPDG(this, counter);
 
-        pdg.remove_insignificant_edges();
+        if (remove_insignificant_edges) {
+            pdg.remove_insignificant_edges();
+        }
 
         Export.exportPDG(this, counter);
 

@@ -112,7 +112,7 @@ public class Export {
 
     public static void exportSubPDG(AsSubgraph<BasicBlock, DependencyEdge> spdg,SubmissionCompare submission_compare,int counter) throws IOException {
 
-        if (!debugging) return;
+        if (true) return;
 
         File subgraph_file = new File("graphs/Comparisons/" + submission_compare.sb1.submission_name + " <-> " + submission_compare.sb2.submission_name + "/" + submission_compare.first_method.method_name + " <-> " + submission_compare.second_method.method_name + "/" + counter + "/" + "subgraph_S.dot");
 

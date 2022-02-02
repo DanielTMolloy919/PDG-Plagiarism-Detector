@@ -25,6 +25,7 @@ public class SubmissionCompare {
     Comparator<DependencyEdge> edge_comparator;
 
     static Mean m = new Mean();
+    static double gamma;
 
     Submission sb1;
     Submission sb2;
@@ -149,8 +150,6 @@ public class SubmissionCompare {
 
         this.first_pdg = first_pdg;
         this.second_pdg = second_pdg;
-        
-        double gamma = 0.9;
 
         // step one - does a theoretical 'S' have more than gamma * G' nodes
         // the largest subgraph 'S' would be the whole graph G, therefore thats our maximum scenario

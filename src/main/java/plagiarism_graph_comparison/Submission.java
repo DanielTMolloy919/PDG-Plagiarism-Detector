@@ -39,6 +39,8 @@ public class Submission {
     static int submission_count = 0;
     static int method_count = 0;
 
+    static int minimum_node_count;
+
     LinkedHashMap<MethodDeclaration,File> md_to_file;
 
     public Submission(File root_dir) throws IOException, StatementNotFoundException  {
@@ -94,7 +96,7 @@ public class Submission {
 
         // remove methods with less than 10 statements from the list
         for (MethodDeclaration method_node : mds) {
-            if (method_node.findAll(Statement.class).size() <= 10) {
+            if (method_node.findAll(Statement.class).size() <= minimum_node_count) {
                 significant_mds.remove(method_node);
             }
         }

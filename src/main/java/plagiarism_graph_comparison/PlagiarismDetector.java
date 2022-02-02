@@ -23,18 +23,29 @@ import plagiarism_graph_comparison.CFG.StatementNotFoundException;
 @Command(name = "PlagiarismDetector")
 public class PlagiarismDetector implements Callable<Integer>{
 
-    @Parameters(index = "0", description = "The path to the submissions directory")
-    private Path path;
+    static double gamma = 0.8;
+    static int minimum_node_count = 10;
+    static boolean remove_insignificant_edges = true;
 
-    @Option(names = {"-d", "--debugging"}, description = "Outputs the graph set for each submission, as well as subgraphs for the isomorphism comparison process")
+
+
+    @Parameters(index = "0", description = "The path to the submissions directory")
+    private Path path; 
+
+    @Option(names = {"-d", "--debugging"}, description = "Outputs the underlying graph set for each submission")
     boolean debugging;
 
     @Override
     public Integer call() throws Exception {
 
-        long start = System.currentTimeMillis();
-
         Export.debugging = debugging;
+
+        SubmissionCompare.gamma = gamma;
+        Submission.minimum_node_count = minimum_node_count;
+        Method.remove_insignificant_edges = remove_insignificant_edges;
+
+
+        long start = System.currentTimeMillis();
         
         ProjectRoot projectRoot = new ParserCollectionStrategy().collect(path);
 
