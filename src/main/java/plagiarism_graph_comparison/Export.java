@@ -18,7 +18,7 @@ import org.jgrapht.nio.graphml.GraphMLExporter;
 
 public class Export {
 
-    static boolean debugging = false; // toggles all graph exports - 
+    static boolean debugging; // toggles all graph exports - 
 
     public static void exportMD(Method method,int counter) throws IOException {
 
@@ -114,7 +114,7 @@ public class Export {
 
         if (!debugging) return;
 
-        File subgraph_file = new File("graphs/0 - Comparisons/" + submission_compare.sb1.submission_name + " <-> " + submission_compare.sb2.submission_name + "/" + submission_compare.first_method.method_name + " <-> " + submission_compare.second_method.method_name + "/" + counter + "/" + "subgraph_S.dot");
+        File subgraph_file = new File("graphs/Comparisons/" + submission_compare.sb1.submission_name + " <-> " + submission_compare.sb2.submission_name + "/" + submission_compare.first_method.method_name + " <-> " + submission_compare.second_method.method_name + "/" + counter + "/" + "subgraph_S.dot");
 
         subgraph_file.getParentFile().mkdirs();
         subgraph_file.createNewFile();
@@ -125,7 +125,7 @@ public class Export {
 
         export_subgraph.exportGraph(spdg, f1);
 
-        File graph_file = new File("graphs/0 - Comparisons/" + submission_compare.sb1.submission_name + " <-> " + submission_compare.sb2.submission_name + "/" + submission_compare.first_method.method_name + " <-> " + submission_compare.second_method.method_name + "/" + counter + "/" + "graph_G_prime.dot");
+        File graph_file = new File("graphs/Comparisons/" + submission_compare.sb1.submission_name + " <-> " + submission_compare.sb2.submission_name + "/" + submission_compare.first_method.method_name + " <-> " + submission_compare.second_method.method_name + "/" + counter + "/" + "graph_G_prime.dot");
 
         graph_file.getParentFile().mkdirs();
         graph_file.createNewFile();

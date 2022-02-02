@@ -16,6 +16,7 @@ import org.apache.commons.math3.util.CombinatoricsUtils;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 import plagiarism_graph_comparison.CFG.StatementNotFoundException;
 
@@ -25,10 +26,15 @@ public class PlagiarismDetector implements Callable<Integer>{
     @Parameters(index = "0", description = "The path to the submissions directory")
     private Path path;
 
+    @Option(names = {"-d", "--debugging"}, description = "Outputs the graph set for each submission, as well as subgraphs for the isomorphism comparison process")
+    boolean debugging;
+
     @Override
     public Integer call() throws Exception {
 
         long start = System.currentTimeMillis();
+
+        Export.debugging = debugging;
         
         ProjectRoot projectRoot = new ParserCollectionStrategy().collect(path);
 
@@ -61,7 +67,7 @@ public class PlagiarismDetector implements Callable<Integer>{
         long end = System.currentTimeMillis(); 
         System.out.println("Elapsed Time in milli seconds: "+ (end-start));
         
-        System.out.println("Average Comparison Time: " + (SubmissionCompare.m.evaluate()));
+        // System.out.println("Average Comparison Time: " + (SubmissionCompare.m.evaluate()));
 
         return 0;
     }
