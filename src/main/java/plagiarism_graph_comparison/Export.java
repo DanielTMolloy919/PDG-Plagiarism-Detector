@@ -26,7 +26,7 @@ public class Export {
 
         MethodDeclaration method_node = method.method_node;
 
-        File export_file = new File("graphs\\" + method.submission_name + "\\" + method.method_name + "\\methods.txt");
+        File export_file = new File("graphs/" + method.submission_name + "/" + method.method_name + "/methods.txt");
 
 
         export_file.getParentFile().mkdirs();
@@ -46,7 +46,7 @@ public class Export {
 
         List<UniqueStatement> statements = method.statement_graph.statements;
 
-        File export_file = new File("graphs\\" + method.submission_name + "\\" + method.method_name + "\\statements.txt");
+        File export_file = new File("graphs/" + method.submission_name + "/" + method.method_name + "/statements.txt");
 
         export_file.getParentFile().mkdirs();
         export_file.createNewFile();
@@ -80,7 +80,7 @@ public class Export {
 
         CFG cfg = method.cfg;
 
-        File export_file = new File("graphs\\" + method.submission_name + "\\" + method.method_name + "\\CFG.dot");
+        File export_file = new File("graphs/" + method.submission_name + "/" + method.method_name + "/CFG.dot");
 
         export_file.getParentFile().mkdirs();
         export_file.createNewFile();
@@ -98,7 +98,7 @@ public class Export {
 
         Graph<BasicBlock, DependencyEdge> cdg = method.pdg.cdg;
 
-        File export_file = new File("graphs\\" + method.submission_name + "\\" + method.method_name + "\\CDG.dot");
+        File export_file = new File("graphs/" + method.submission_name + "/" + method.method_name + "/CDG.dot");
 
         export_file.getParentFile().mkdirs();
         export_file.createNewFile();
@@ -110,25 +110,39 @@ public class Export {
         export.exportGraph(cdg, f);
     }
 
-    // public static void exporter(AsSubgraph<BasicBlock, DependencyEdge> spdg,int counter, int counter2) throws IOException {
+    public static void exportSubPDG(AsSubgraph<BasicBlock, DependencyEdge> spdg,SubmissionCompare submission_compare,int counter) throws IOException {
 
-    //     File export_file = new File("graphs\\" + counter + "\\subgraphs\\" + counter2 + ".dot");
+        if (!debugging) return;
 
-    //     export_file.getParentFile().mkdirs();
-    //     export_file.createNewFile();
+        File subgraph_file = new File("graphs/0 - Comparisons/" + submission_compare.sb1.submission_name + " <-> " + submission_compare.sb2.submission_name + "/" + submission_compare.first_method.method_name + " <-> " + submission_compare.second_method.method_name + "/" + counter + "/" + "subgraph_S.dot");
 
-    //     FileWriter f = new FileWriter(export_file);
+        subgraph_file.getParentFile().mkdirs();
+        subgraph_file.createNewFile();
+
+        FileWriter f1 = new FileWriter(subgraph_file);
             
-    //     DOTExporter<BasicBlock, DependencyEdge> export = new DOTExporter<>(v -> v.toString());
+        DOTExporter<BasicBlock, DependencyEdge> export_subgraph = new DOTExporter<>(v -> v.toString());
 
-    //     export.exportGraph(spdg, f);
-    // }
+        export_subgraph.exportGraph(spdg, f1);
+
+        File graph_file = new File("graphs/0 - Comparisons/" + submission_compare.sb1.submission_name + " <-> " + submission_compare.sb2.submission_name + "/" + submission_compare.first_method.method_name + " <-> " + submission_compare.second_method.method_name + "/" + counter + "/" + "graph_G_prime.dot");
+
+        graph_file.getParentFile().mkdirs();
+        graph_file.createNewFile();
+
+        FileWriter f2 = new FileWriter(graph_file);
+
+        DOTExporter<BasicBlock, DependencyEdge> export_graph = new DOTExporter<>(v -> v.toString());
+        export_graph.exportGraph(submission_compare.first_method.pdg.node_graph, f2);
+
+        
+    }
 
     // public static void exporter(Method method,int counter, String raw) throws IOException {
 
     //     Graph<BasicBlock, DependencyEdge> cdg = me
 
-    //     File export_file = new File("graphs\\" + counter + "\\CDG-Raw.dot");
+    //     File export_file = new File("graphs/" + counter + "/CDG-Raw.dot");
 
     //     export_file.getParentFile().mkdirs();
     //     export_file.createNewFile();
@@ -146,7 +160,7 @@ public class Export {
 
         DDG ddg = method.ddg;
 
-        File export_file = new File("graphs\\" + method.submission_name + "\\" + method.method_name + "\\DDG.dot");
+        File export_file = new File("graphs/" + method.submission_name + "/" + method.method_name + "/DDG.dot");
 
         export_file.getParentFile().mkdirs();
         export_file.createNewFile();
@@ -164,7 +178,7 @@ public class Export {
 
         PDG pdg = method.pdg;
 
-        File export_file = new File("graphs\\" + method.submission_name + "\\" + method.method_name + "\\PDG.dot");
+        File export_file = new File("graphs/" + method.submission_name + "/" + method.method_name + "/PDG.dot");
 
         export_file.getParentFile().mkdirs();
         export_file.createNewFile();
@@ -182,7 +196,7 @@ public class Export {
 
         PDG pdg = method.pdg;
 
-        File export_file = new File("graphs\\" + method.submission_name + "\\" + method.method_name + "\\PDG_Raw.dot");
+        File export_file = new File("graphs/" + method.submission_name + "/" + method.method_name + "/PDG_Raw.dot");
 
         export_file.getParentFile().mkdirs();
         export_file.createNewFile();
@@ -195,7 +209,7 @@ public class Export {
     }
 
     // public static void exporter(DDG ddg ,int counter) throws IOException {
-    //     File export_file = new File("graphs\\DDGs\\file" + counter + ".graphml");
+    //     File export_file = new File("graphs/DDGs/file" + counter + ".graphml");
 
     //     export_file.getParentFile().mkdirs();
     //     export_file.createNewFile();
@@ -212,7 +226,7 @@ public class Export {
     // public static void exportPDG(Method method ,int counter) throws IOException {
     //     PDG pdg = method.pdg;
 
-    //     File export_file = new File("graphs\\" + method.submission_name + "\\" + method.method_name + "\\PDG.graphml");
+    //     File export_file = new File("graphs/" + method.submission_name + "/" + method.method_name + "/PDG.graphml");
 
     //     export_file.getParentFile().mkdirs();
     //     export_file.createNewFile();
@@ -230,7 +244,7 @@ public class Export {
 
         if (!debugging) return;
 
-        File export_file = new File("graphs\\" + counter + "\\CFG-Reversed.dot");        
+        File export_file = new File("graphs/" + counter + "/CFG-Reversed.dot");        
 
         export_file.getParentFile().mkdirs();
         export_file.createNewFile();

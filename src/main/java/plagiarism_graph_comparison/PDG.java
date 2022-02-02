@@ -254,6 +254,6 @@ public class PDG {
 
     @Override
     public String toString() {
-        return this.method.method_name + " (" + this.method.node_count + ")";
+        return this.method.method_name + " (" + this.method.node_count + ")" + " in " + this.method.submission_name;
     }
 }

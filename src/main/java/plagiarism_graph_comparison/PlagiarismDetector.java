@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.stream.LongStream;
 
 import com.github.javaparser.utils.ParserCollectionStrategy;
 import com.github.javaparser.utils.ProjectRoot;
@@ -59,6 +60,8 @@ public class PlagiarismDetector implements Callable<Integer>{
 
         long end = System.currentTimeMillis(); 
         System.out.println("Elapsed Time in milli seconds: "+ (end-start));
+        
+        System.out.println("Average Comparison Time: " + (SubmissionCompare.m.evaluate()));
 
         return 0;
     }

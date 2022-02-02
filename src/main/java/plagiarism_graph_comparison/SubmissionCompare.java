@@ -8,9 +8,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 
 import com.github.javaparser.ast.body.MethodDeclaration;
 
+import org.apache.commons.math3.geometry.spherical.twod.Vertex;
+import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.util.CombinatoricsUtils;
 import org.jgrapht.alg.isomorphism.VF2SubgraphIsomorphismInspector;
 import org.jgrapht.graph.AsSubgraph;
@@ -20,17 +23,26 @@ import org.jgrapht.graph.DefaultDirectedGraph;
 public class SubmissionCompare {
     Comparator<BasicBlock> vertex_comparator;
     Comparator<DependencyEdge> edge_comparator;
-    List<Double> data_array;
+
+    static Mean m = new Mean();
 
     Submission sb1;
     Submission sb2;
 
+    Method first_method;
+    Method second_method;
+
+    PDG first_pdg;
+    PDG second_pdg;
+
     ArrayList<Method> sb1_methods;
     ArrayList<Method> sb2_methods;
 
+    static List<Long> average = new ArrayList<>();
+
     double score;
 
-    static int counter;
+    static int counter = 0;
 
     ArrayList<ArrayList<Method>> plagiarized_pairs;
 
@@ -41,6 +53,8 @@ public class SubmissionCompare {
         sb1_methods = sb1.method_objects;
         sb2_methods = sb2.method_objects;
 
+        
+
         plagiarized_pairs = new ArrayList<>();
 
         for (Method method_1 : sb1_methods) {
@@ -49,8 +63,6 @@ public class SubmissionCompare {
             }
         }
 
-        score_prep();
-
         this.score = score();
         
     }
@@ -58,11 +70,11 @@ public class SubmissionCompare {
     private double score() {
         int total_nodes = 0;
 
-        for (MethodDeclaration md : sb1.mds) {
+        for (MethodDeclaration md : sb1.significant_mds) {
             total_nodes += sb1.method_node_count.get(md);
         }
 
-        for (MethodDeclaration md : sb2.mds) {
+        for (MethodDeclaration md : sb2.significant_mds) {
             total_nodes += sb2.method_node_count.get(md);
         }
 
@@ -81,24 +93,24 @@ public class SubmissionCompare {
             }
         }
 
-        // final Object[][] table = new String[plagiarized_pairs.size() + 2][];
-        // table[0] = new String[] { "Submission " + sb1.submission_name, "", "Submission " + sb2.submission_name};
-        // table[1] = new String[] { "---------", "---------", "---------"};
+        final Object[][] table = new String[plagiarized_pairs.size() + 2][];
+        table[0] = new String[] { "Submission " + sb1.submission_name, "", "Submission " + sb2.submission_name};
+        table[1] = new String[] { "---------", "---------", "---------"};
 
-        // for (int i = 0; i < plagiarized_pairs.size(); i++) {
-        //     Method m1 = plagiarized_pairs.get(i).get(0);
-        //     Method m2 =plagiarized_pairs.get(i).get(1);
-        //     table[i+2] = new String[] { m1.method_name + " (" + m1.node_count + ")", "<------->", m2.method_name+ " (" + m2.node_count + ")"};
-        // }
+        for (int i = 0; i < plagiarized_pairs.size(); i++) {
+            Method m1 = plagiarized_pairs.get(i).get(0);
+            Method m2 =plagiarized_pairs.get(i).get(1);
+            table[i+2] = new String[] { m1.method_name + " (" + m1.node_count + ")", "<------->", m2.method_name+ " (" + m2.node_count + ")"};
+        }
 
-        // for (final Object[] row : table) {
-        //     System.out.format("%-15s%-15s%-15s%n", row);
-        // }
+        for (final Object[] row : table) {
+            System.out.format("%-15s%-15s%-15s%n", row);
+        }
         System.out.println("\n\n");
 
-        double score = data_array.get(counter);
-
         counter++;
+
+        score = (double) plagiarized_nodes / total_nodes;
 
         return score;
 
@@ -107,6 +119,9 @@ public class SubmissionCompare {
     }
 
     private void compare(Method first_method, Method second_method) throws IOException {
+        this.first_method = first_method;
+        this.second_method = second_method;
+
         PDG first_pdg= first_method.pdg;
         PDG second_pdg = second_method.pdg;
 
@@ -130,9 +145,12 @@ public class SubmissionCompare {
     }
 
     // This is based on the paper 'GPLAG: detection of software plagiarism by program dependence graph analysis' by Liu et al. 2006
-    private boolean is_gamma_isomorphic(PDG first_pdg, PDG second_pdg) {
+    private boolean is_gamma_isomorphic(PDG first_pdg, PDG second_pdg) throws IOException {
+
+        this.first_pdg = first_pdg;
+        this.second_pdg = second_pdg;
         
-        double gamma = 0.95;
+        double gamma = 0.9;
 
         // step one - does a theoretical 'S' have more than gamma * G' nodes
         // the largest subgraph 'S' would be the whole graph G, therefore thats our maximum scenario
@@ -161,8 +179,9 @@ public class SubmissionCompare {
 
         List<BasicBlock> first_pdg_list = new ArrayList<>(first_pdg_set);
 
+        int combinations_count  = 0;
 
-        while (combinations.hasNext()) {
+        while (combinations.hasNext() && combinations_count < 10000) {
             final int[] combination = combinations.next();
             Set<BasicBlock> subgraph_vertexes = new HashSet<BasicBlock>();
 
@@ -172,11 +191,11 @@ public class SubmissionCompare {
 
             AsSubgraph<BasicBlock, DependencyEdge> subgraph = new AsSubgraph<>(first_pdg.node_graph, subgraph_vertexes);
             
-            for (BasicBlock basicBlock : subgraph_vertexes) {
-                if (!first_pdg.node_graph.containsVertex(basicBlock)) {
-                    System.out.println(basicBlock);
-                }
-            }
+            // for (BasicBlock basicBlock : subgraph_vertexes) {
+            //     if (!first_pdg.node_graph.containsVertex(basicBlock)) {
+            //         System.out.println(basicBlock);
+            //     }
+            // }
             // counter++;
             // if (counter % 100 == 0) {
             //     System.out.println(counter);
@@ -193,17 +212,31 @@ public class SubmissionCompare {
                     return true;
                 }
 
-            iterator_count++;
+            combinations_count++;
+
         }
 
         return false;
     }
 
-    private boolean is_subgraph_isomorphic(AsSubgraph<BasicBlock, DependencyEdge> subgraph_S, DefaultDirectedGraph<BasicBlock, DependencyEdge> Graph_G_prime) {
+    private boolean is_subgraph_isomorphic(AsSubgraph<BasicBlock, DependencyEdge> subgraph_S, DefaultDirectedGraph<BasicBlock, DependencyEdge> Graph_G_prime) throws IOException {
 
-        VF2SubgraphIsomorphismInspector<BasicBlock,DependencyEdge> iso_inspector = new VF2SubgraphIsomorphismInspector<>(subgraph_S,Graph_G_prime,vertex_comparator,edge_comparator);
-        // VF2SubgraphIsomorphismInspector<BasicBlock,DependencyEdge> iso_inspector = new VF2SubgraphIsomorphismInspector<>(pdg2,pdg2);
+        long start = System.currentTimeMillis();
 
+        System.out.println(counter);
+        counter++;
+
+        VF2SubgraphIsomorphismInspector<BasicBlock,DependencyEdge> iso_inspector = new VF2SubgraphIsomorphismInspector<>(Graph_G_prime,subgraph_S,vertex_comparator,edge_comparator);
+
+        Export.exportSubPDG(subgraph_S,this,counter);
+
+        System.out.println(counter);
+        if (counter < 1000) {
+            long end = System.currentTimeMillis(); 
+            m.increment((double) Math.round(end-start));
+        }
+        
+        counter++;
         return iso_inspector.isomorphismExists();
     }
 
@@ -242,11 +275,4 @@ public class SubmissionCompare {
                
 //     }
 // }
-
-private void score_prep() {
-    data_array = new ArrayList<>();
-    data_array.add(0.4245755398676);
-    data_array.add(0.0794058321243);
-    data_array.add(0.0523874183450);
-}
 }
