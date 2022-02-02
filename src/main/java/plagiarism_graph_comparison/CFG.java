@@ -16,6 +16,7 @@ import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 
+// This class holds the control flow graph, and associated information
 public class CFG {
     List<UniqueStatement> statements;
     List<BasicBlock> basic_blocks;
@@ -45,16 +46,16 @@ public class CFG {
 
         node_graph = new DefaultDirectedGraph<>(DefaultEdge.class);
 
+        // add all the method nodes to the CFG
         for (BasicBlock basicBlock : basic_blocks) {
-            node_graph.addVertex(basicBlock); // load all the statement nodes
+            node_graph.addVertex(basicBlock); 
         }
-
-        // Export.exporter(statements, counter);
 
         statement_blacklist = new ArrayList<Integer>();
 
         BasicBlock bb;
 
+        // add custom start and end basic blocks, unique to CFG
         bb = new BasicBlock(true);
         node_graph.addVertex(bb);
         Statement_id_to_BasicBlock.put("START", bb);
@@ -63,6 +64,7 @@ public class CFG {
         node_graph.addVertex(bb);
         Statement_id_to_BasicBlock.put("END", bb);
 
+        // special cases for very small methods
         if (statements.size() == 0) {
             link("START", "END");
             // Export.exporter(this,counter);
@@ -122,11 +124,13 @@ public class CFG {
 
             // if its a 'while' statement
             else if (statement.isWhileStmt()) {
+                // get the last child basic block and link it to the first
                 int last_child_id = get_last_child(current_id);
 
                 link(get_last_child(last_child_id), current_id);
                 statement_blacklist.add(last_child_id);
 
+                // get the subsequent basic block and link the first basic block to it
                 int subsequent_id = get_subsequent_sibling(current_id);
 
                 link(current_id, subsequent_id);
@@ -138,11 +142,13 @@ public class CFG {
 
                 NodeList<SwitchEntry> switch_entries = switchstmt.getEntries();
 
+                // get all the switch entries
                 List<Statement> entries = new ArrayList<Statement>();
 
                 switch_entries.stream().forEach(entry -> entry.getStatements().addAll(entries));
 
                 for (Statement entry : entries) {
+                    // link each entry to the first and last child basic block
                     int entry_id = statement_to_id(entry);
                     int last_child_id = get_last_child(entry_id);
 
@@ -158,9 +164,13 @@ public class CFG {
 
                 List<Statement> try_statements = trystmt.getTryBlock().getStatements();
 
+                // link the last try basic block to the subsequent basic block
+
                 int last_try_id = statement_to_id(try_statements.get(try_statements.size() - 1));
 
                 int subsequent_id = get_subsequent_sibling(current_id);
+
+                // ignore all the catch basic blocks
 
                 link(last_try_id, subsequent_id);
                 link(current_id, current_id + 1);
@@ -183,7 +193,7 @@ public class CFG {
                 link(current_id, statement_to_id(statement.findAncestor(Statement.class).get()));
             }
 
-            // else if (!statement_blacklist.contains(current_id)) { // if the statement isn't on the blacklist,
+            // otherwise it must be a normal statement - link it in sequence
             else {    
                 link(current_id, current_id + 1);
             }
@@ -200,11 +210,13 @@ public class CFG {
         return;
     }
 
+    // 
     public boolean path_exists(int start_id, int end_id) {
         
         return true;
     }
 
+    // A small method set to make the process of linking two nodes in the graph easier. Overloaded methods to enable use of an integer or string id
     private void link(int start_id, int end_id) {
         if (end_id == 999) {
             link_meta(Integer.toString(start_id), "END");
@@ -237,6 +249,7 @@ public class CFG {
         node_graph.addEdge(Statement_id_to_BasicBlock.get(start_id), Statement_id_to_BasicBlock.get(end_id));
     }
 
+    // given a statement id, return the statement object it's associated with
     private int statement_to_id(Statement statement) throws StatementNotFoundException {
         OptionalInt statement_position = IntStream.range(0, statements.size())
                 .filter(id -> statements.get(id).statement.equals(statement))
@@ -250,7 +263,7 @@ public class CFG {
             throw new StatementNotFoundException("Couldn't find an ID for the given statement");
         }
     }
-
+    // get the last child basic block inside a block statement - e.g. the last line inside an if statement
     private int get_last_child(int id) {
         List<Statement> children = statements.get(id).statement.findAll(Statement.class);
 
@@ -263,6 +276,7 @@ public class CFG {
         return statement_to_id(parent) + children.size() - 1;
     }
 
+    // gets the basic block next to the given basic block. e.g. if the function is given an if statement, it will return the first basic block after it.
     private int get_subsequent_sibling(int id) {
         original_statement = statements.get(id).statement;
         List<Statement> children = statements.get(id).statement.findAll(Statement.class);
@@ -289,6 +303,7 @@ public class CFG {
         // original_statement.toString());
     }
 
+    // Is the statement a basic block or not
     private boolean is_statement_special(int id) {
         Statement statement = statements.get(id).statement;
 

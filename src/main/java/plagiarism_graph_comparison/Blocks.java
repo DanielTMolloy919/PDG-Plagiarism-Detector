@@ -10,7 +10,7 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.Statement;
 
-// All the basic blocks in a method
+// An object containing all the basic blocks in a method
 public class Blocks {
     List<UniqueStatement> statements;
     List<BasicBlock> blocks;
@@ -26,6 +26,7 @@ public class Blocks {
         this.method = method;
         this.method_node = method.method_node;
 
+        // extract all the statements in a method
         List<Statement> method_statements = method_node.findAll(Statement.class);
         statements = new ArrayList<>();
 
@@ -40,12 +41,10 @@ public class Blocks {
 
         List<String> method_parameters = new ArrayList<>();
 
-        // extract all the variables defined in the method declaration
+        // extract all the variables defined in the method declaration - the program doesn't catch these normally
         method_parameters.addAll(method_node.getParameters().stream().map(x -> x.getName().asString()).collect(Collectors.toList()));
 
-        // count++;
-        // System.out.println(count);
-
+        // create a new basic block for each statement, and make it easily accessible with maps
         BasicBlock bb = new BasicBlock(statements.get(0), 0);
         blocks.add(bb);
         bb.set_variables(method_parameters);

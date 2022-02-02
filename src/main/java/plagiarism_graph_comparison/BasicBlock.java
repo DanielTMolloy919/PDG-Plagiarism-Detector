@@ -39,6 +39,7 @@ public class BasicBlock {
         attributes = new ArrayList<String>();
     }
 
+    // enables the addition of 'START' and 'END' nodes for CFGs
     public BasicBlock(boolean start) {
         if (start) {
             is_start = true;
@@ -59,7 +60,7 @@ public class BasicBlock {
         return this.id;
     }
 
-    // adds new variables to relevant lists if they aren't already on there
+    // adds new variables to variable lists if they aren't already on there
     public void add_variables(List<String> defined_variables, List<String> used_variables) {
         for (String variable : defined_variables) {
             if (!this.defined_variables.contains(variable)) {
@@ -80,6 +81,7 @@ public class BasicBlock {
         }
     }
 
+    // Defines a single 'type' for each basic block, roughly based off 2006 GPLAG paper. Used to determine whether two nodes are identical
     public void generate_type() {
         if (attributes.contains("control")) {
             this.type = "control";
@@ -135,30 +137,5 @@ public class BasicBlock {
             return extract;
         }
         
-    }
-}
-
-class DOTEscaper{
-    
-    private static final CharSequenceTranslator ESCAPE_CUSTOM;
-    
-    static {
-        final Map<CharSequence, CharSequence> escapeCustomMap = new HashMap<>();
-                    
-        escapeCustomMap.put("\"" ,"" );
-        escapeCustomMap.put("\'" ,"" );
-        escapeCustomMap.put("[" ,"" );
-        escapeCustomMap.put("]" ,"" );
-        escapeCustomMap.put("(" ,"" );
-        escapeCustomMap.put(")" ,"" );
-        escapeCustomMap.put("{" ,"" );
-        escapeCustomMap.put("\n" ,"" );
-        escapeCustomMap.put(";" ,"" );
-        escapeCustomMap.put(" ", "");
-        ESCAPE_CUSTOM = new AggregateTranslator(new LookupTranslator(escapeCustomMap));
-    }
-
-    public static final String DOTEscape(final String input) {
-        return ESCAPE_CUSTOM.translate(input);
     }
 }

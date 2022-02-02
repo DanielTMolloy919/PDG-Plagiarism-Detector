@@ -1,7 +1,7 @@
 package plagiarism_graph_comparison;
 
 import org.jgrapht.graph.DefaultEdge;
-
+// a custom graph edge object that stores whether it's a control or data dependence
 public class DependencyEdge extends DefaultEdge {
     String label;
 

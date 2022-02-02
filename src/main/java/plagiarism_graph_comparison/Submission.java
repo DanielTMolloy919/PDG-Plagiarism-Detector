@@ -11,17 +11,13 @@ import com.github.javaparser.ParseResult;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.stmt.Statement;
-import com.github.javaparser.utils.ParserCollectionStrategy;
-import com.github.javaparser.utils.ProjectRoot;
 import com.github.javaparser.utils.SourceRoot;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.DirectoryFileFilter;
-import org.apache.commons.io.filefilter.RegexFileFilter;
 
 import plagiarism_graph_comparison.CFG.StatementNotFoundException;
 
-
+// A class that holds all the methods and data of a single project
 public class Submission {
 
     String file_name;
@@ -52,7 +48,8 @@ public class Submission {
         submission_count++;
 
         compilations = new ArrayList<>();
-
+        
+        // Extract the compilation units out of every file in the project
         Collection<File> source_files = FileUtils.listFiles(root_dir, new String[] { "java" }, true);
 
         JavaParser parser = new JavaParser();
@@ -78,6 +75,7 @@ public class Submission {
 
         method_node_count = new LinkedHashMap<>();
 
+        // extract the method declarations out of each compilation unit
         for (CompilationUnit cp : compilations) {
             List<MethodDeclaration> methods = cp.findAll(MethodDeclaration.class);
             for (MethodDeclaration method : methods) {
@@ -86,13 +84,10 @@ public class Submission {
                 method_node_count.put(method, method.findAll(Statement.class).size());
             }
         }
-        
-        // compilations.stream().forEach(cp -> this.method_nodes.addAll(cp.findAll(MethodDeclaration.class))); // loop through each compilation unit, find all the method nodes and add them to the list
 
         significant_mds.addAll(mds);
 
         method_count += mds.size();
-
 
         // remove methods with less than 10 statements from the list
         for (MethodDeclaration method_node : mds) {
@@ -101,7 +96,7 @@ public class Submission {
             }
         }
 
-        // iterate over all methods
+        // create a new method object for each method declaration
         significant_mds.stream().forEach(method_node -> {
             try {
                 method_objects.add(new Method(method_node,this));
@@ -111,20 +106,6 @@ public class Submission {
             } catch (StatementNotFoundException e) {
                 e.printStackTrace();
             }
-        }); // create a method object for each node, which will build a pdg for each
-
-        ArrayList<Method> significant_methods = new ArrayList<>();
-
-        for (Method md : method_objects) {
-            if (md.pdg.node_graph.edgeSet().size() >= 20) {
-                significant_methods.add(md);
-            }
-        }
-
-        // method_objects = significant_methods;
-    }
-
-    private void project_importer(SourceRoot source_root) {
-        // Collection files = FileUtils.listFiles(source_root.);
+        });
     }
 }

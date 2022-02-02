@@ -19,7 +19,7 @@ import org.jgrapht.alg.isomorphism.VF2SubgraphIsomorphismInspector;
 import org.jgrapht.graph.AsSubgraph;
 import org.jgrapht.graph.DefaultDirectedGraph;
 
-
+// This class holds the plagiarism results from a given submission pair
 public class SubmissionCompare {
     Comparator<BasicBlock> vertex_comparator;
     Comparator<DependencyEdge> edge_comparator;
@@ -54,10 +54,9 @@ public class SubmissionCompare {
         sb1_methods = sb1.method_objects;
         sb2_methods = sb2.method_objects;
 
-        
-
         plagiarized_pairs = new ArrayList<>();
 
+        // compare every combination of the two method sets
         for (Method method_1 : sb1_methods) {
             for (Method method_2 : sb2_methods) {
                 compare(method_1, method_2);
@@ -68,6 +67,8 @@ public class SubmissionCompare {
         
     }
 
+    // returns a score for fraction of the submission that is plagiarised
+    // It counts up the number of nodes in plagiarised methods and returns it as a fraction of the total number of nodes across the submission
     private double score() {
         int total_nodes = 0;
 
@@ -93,7 +94,7 @@ public class SubmissionCompare {
                 plagiarized_nodes += pair.get(1).node_count;
             }
         }
-
+        // List out each detected plagiarsed method pair
         final Object[][] table = new String[plagiarized_pairs.size() + 2][];
         table[0] = new String[] { "Submission " + sb1.submission_name, "", "Submission " + sb2.submission_name};
         table[1] = new String[] { "---------", "---------", "---------"};
@@ -119,6 +120,7 @@ public class SubmissionCompare {
         // return (double) plagiarized_nodes/total_nodes;
     }
 
+    // Test two methods for plagarism
     private void compare(Method first_method, Method second_method) throws IOException {
         this.first_method = first_method;
         this.second_method = second_method;
@@ -126,6 +128,8 @@ public class SubmissionCompare {
         PDG first_pdg= first_method.pdg;
         PDG second_pdg = second_method.pdg;
 
+        // generates node type for all nodes in both methods
+        // 'type' determines whether two nodes are identical or not
         Set<BasicBlock> bb_set = first_pdg.node_graph.vertexSet();
         for (BasicBlock bb : bb_set) {
             bb.generate_type();
@@ -136,8 +140,8 @@ public class SubmissionCompare {
             bb.generate_type();
         }
 
+        // if the method PDGs are gamma isomorphic, add them to the list of plagiarised method pairs
         if (is_gamma_isomorphic(first_pdg, second_pdg)) {
-            // System.out.println("Potential Plagiarism between submissions " + m1.toString() + " and " + m2.toString());
             ArrayList<Method> pair = new ArrayList<>();
             pair.add(first_method);
             pair.add(second_method);
@@ -145,7 +149,8 @@ public class SubmissionCompare {
         }
     }
 
-    // This is based on the paper 'GPLAG: detection of software plagiarism by program dependence graph analysis' by Liu et al. 2006
+    // Tests whether two PDGs have a gamma isomorphism
+    // Based on the paper 'GPLAG: detection of software plagiarism by program dependence graph analysis' by Liu et al. 2006
     private boolean is_gamma_isomorphic(PDG first_pdg, PDG second_pdg) throws IOException {
 
         this.first_pdg = first_pdg;
@@ -180,6 +185,8 @@ public class SubmissionCompare {
 
         int combinations_count  = 0;
 
+        // if no isomorphisms exist between 100000 test subgraphs and G', then it's likely the pair isn't plagiarised
+
         while (combinations.hasNext() && combinations_count < 10000) {
             final int[] combination = combinations.next();
             Set<BasicBlock> subgraph_vertexes = new HashSet<BasicBlock>();
@@ -189,19 +196,6 @@ public class SubmissionCompare {
             }
 
             AsSubgraph<BasicBlock, DependencyEdge> subgraph = new AsSubgraph<>(first_pdg.node_graph, subgraph_vertexes);
-            
-            // for (BasicBlock basicBlock : subgraph_vertexes) {
-            //     if (!first_pdg.node_graph.containsVertex(basicBlock)) {
-            //         System.out.println(basicBlock);
-            //     }
-            // }
-            // counter++;
-            // if (counter % 100 == 0) {
-            //     System.out.println(counter);
-            // }
-
-            // first_pdg.node_graph.edgesOf(first_pdg.Statement_id_to_BasicBlock.get("1"))
-            // int proxy_test = comparator_proxy(first_pdg.Statement_id_to_BasicBlock.get("1"), second_pdg.Statement_id_to_BasicBlock.get("18"));
 
             first_pdg.Statement_id_to_BasicBlock.get("1");
 
@@ -218,27 +212,23 @@ public class SubmissionCompare {
         return false;
     }
 
+    // Tests whether two graphs have a subgraph isomorphism
     private boolean is_subgraph_isomorphic(AsSubgraph<BasicBlock, DependencyEdge> subgraph_S, DefaultDirectedGraph<BasicBlock, DependencyEdge> Graph_G_prime) throws IOException {
 
-        long start = System.currentTimeMillis();
-
-        System.out.println(counter);
-        counter++;
-
+        // Uses JGraphT's built in subgraph isomorphism tester
         VF2SubgraphIsomorphismInspector<BasicBlock,DependencyEdge> iso_inspector = new VF2SubgraphIsomorphismInspector<>(Graph_G_prime,subgraph_S,vertex_comparator,edge_comparator);
 
         Export.exportSubPDG(subgraph_S,this,counter);
 
         System.out.println(counter);
-        if (counter < 1000) {
-            long end = System.currentTimeMillis(); 
-            m.increment((double) Math.round(end-start));
-        }
         
         counter++;
+        // if an isomorphism exists, return true;
         return iso_inspector.isomorphismExists();
     }
 
+    // Comparators that define whether two nodes or edges are identical
+    // For nodes, this is based on 'type', for edges this is based on 'label'
     private int comparator_proxy(BasicBlock left, BasicBlock right) {
         return left.type.equals(right.type) ? 0 : -1;
     }
@@ -246,32 +236,4 @@ public class SubmissionCompare {
     private int comparator_proxy(DependencyEdge left, DependencyEdge right) {
         return left.label.equals(right.label) ? 0 : -1;
     }
-
-
-// class TwoListCombine<T> implements Iterator<List<T>> {
-
-//     final List<T> list1;
-//     final List<T> list2;
-//     int list1_position;
-//     int list2_position;
-
-//     public TwoListCombine(List<T> list1, List<T> list2) {
-//         this.list1 = list1;
-//         this.list2 = list2;
-//         list1_position = 0;
-//         list2_position = 0;
-//     }
-
-//     @Override
-//     public boolean hasNext() {
-//         // has first index not yet reached max position?
-//         return list1_position < list1.size() || list2_position < list2.size();
-//     }
-
-//     @Override
-//     public List<T> next() {
-//         List<T> result = new ArrayList<>(2);
-               
-//     }
-// }
 }

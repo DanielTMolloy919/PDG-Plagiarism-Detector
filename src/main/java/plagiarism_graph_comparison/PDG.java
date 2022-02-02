@@ -17,6 +17,7 @@ import org.jgrapht.alg.shortestpath.AllDirectedPaths;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 
+// This is the class that holds the program dependence graph, and associated information
 public class PDG {
     List<UniqueStatement> statements;
     List<BasicBlock> basic_blocks;
@@ -49,9 +50,6 @@ public class PDG {
         this.node_graph = method.ddg.node_graph;
         this.method = method;
 
-        // count++;
-        // System.out.println(count);
-
         bb_ipdom = new LinkedHashMap<>(); // contains the immediate post dominator for each statement
         edge_map = new LinkedHashMap<>();
 
@@ -83,8 +81,6 @@ public class PDG {
             }
         }
 
-        // Export.exporter(cdg, counter,"RAW");
-
         all_cdg_paths = new AllDirectedPaths<>(cdg);
 
         // remove duplicate edges
@@ -105,7 +101,7 @@ public class PDG {
             }
         }
 
-        // link up direct children
+        // link up direct children of the method
 
         List<BasicBlock> direct_children = new ArrayList<>();
 
@@ -116,13 +112,14 @@ public class PDG {
             } 
         }
 
-        // for each child, link to the start node
+        // for each direct child, link to the method node
         for (BasicBlock child : direct_children) {
             node_graph.addEdge(Statement_id_to_BasicBlock.get("0"), child, new DependencyEdge("CD"));
             cdg.addEdge(Statement_id_to_BasicBlock.get("0"), child, new DependencyEdge("CD"));
         }
     }
 
+    // removes all nodes that aren't basic blocks
     public void remove_insignificant_edges() {
         // remove insignificant nodes - no DDG connections and only one CDG connection
         
@@ -137,7 +134,8 @@ public class PDG {
             }
         }
     }
-
+    
+    // a small method to link two basic blocks together in the PDG
     private void add_control_edge(BasicBlock source, BasicBlock destination) {
         node_graph.addEdge(source, destination, new DependencyEdge("CD"));
         cdg.addEdge(source, destination, new DependencyEdge("CD"));
@@ -152,6 +150,7 @@ public class PDG {
         }
     }
 
+    // Could these two nodes have a control dependency
     private boolean is_connection_eliminated(BasicBlock start_bb, BasicBlock end_bb) {
 
         // get all the paths between the two nodes
@@ -237,6 +236,7 @@ public class PDG {
         return remaining_candidates.get(0);
     }
 
+    // Does one basic block post dominate the other?
     private boolean is_pdom(BasicBlock dominated_bb, BasicBlock dominator_bb, List<GraphPath<BasicBlock, DefaultEdge>> pdom_paths) {
 
         if (pdom_paths.size() > 100) { // Warns the user of unusual behaviour

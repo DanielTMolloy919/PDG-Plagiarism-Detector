@@ -23,11 +23,10 @@ import plagiarism_graph_comparison.CFG.StatementNotFoundException;
 @Command(name = "PlagiarismDetector")
 public class PlagiarismDetector implements Callable<Integer>{
 
+    // variables to change sensitivity of the comparison
     static double gamma = 0.8;
     static int minimum_node_count = 10;
     static boolean remove_insignificant_edges = true;
-
-
 
     @Parameters(index = "0", description = "The path to the submissions directory")
     private Path path; 
@@ -38,17 +37,15 @@ public class PlagiarismDetector implements Callable<Integer>{
     @Override
     public Integer call() throws Exception {
 
+        // set sensitivity variables
         Export.debugging = debugging;
-
         SubmissionCompare.gamma = gamma;
         Submission.minimum_node_count = minimum_node_count;
         Method.remove_insignificant_edges = remove_insignificant_edges;
-
-
-        long start = System.currentTimeMillis();
         
         ProjectRoot projectRoot = new ParserCollectionStrategy().collect(path);
 
+        // create a submission for each file found in the provided directory
         File[] files = path.toFile().listFiles();
 
         List<Submission> submissions = new ArrayList<>();
@@ -64,21 +61,19 @@ public class PlagiarismDetector implements Callable<Integer>{
 
         System.out.println("Directory Parsed, found " + Submission.submission_count + " submissions and " + Submission.method_count + " methods");
 
+        // find all combinations of submissions to compare
         Iterator<int[]> combinations = CombinatoricsUtils.combinationsIterator(submissions.size(),2);
 
+        // create a new SubmissionCompare object for each
         while (combinations.hasNext()) {
             final int[] combination = combinations.next();
             submission_pairs.add(new SubmissionCompare(submissions.get(combination[0]), submissions.get(combination[1])));
         }
 
+        // print score for each submission pair
         for (SubmissionCompare pair : submission_pairs) {
             System.out.println("Score for submission pair " + pair.sb1.submission_name + " and " + pair.sb2.submission_name + " is " + Double.toString(pair.score));
         }
-
-        long end = System.currentTimeMillis(); 
-        System.out.println("Elapsed Time in milli seconds: "+ (end-start));
-        
-        // System.out.println("Average Comparison Time: " + (SubmissionCompare.m.evaluate()));
 
         return 0;
     }

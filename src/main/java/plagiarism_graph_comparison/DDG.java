@@ -20,6 +20,7 @@ import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.EdgeReversedGraph;
 
+// This is the class that holds the data dependence graph, and associated information
 public class DDG {
     List<UniqueStatement> statements;
     List<BasicBlock> basic_blocks;
@@ -45,7 +46,6 @@ public class DDG {
         this.Statement_to_BasicBlock = blocks.Statement_to_BasicBlock;
         this.counter = counter;
         
-
         node_graph = new DefaultDirectedGraph<>(DependencyEdge.class);
 
         this.cfg = cfg;
@@ -66,6 +66,9 @@ public class DDG {
             Statement statement = unique_statement.statement;
             BasicBlock bb = Statement_to_BasicBlock.get(unique_statement);
             UniqueExpression expression;
+
+            // find all statements that might contain variables
+            // based on the type of statement, extract all variable expressions
 
             if (statement.isExpressionStmt()) {
                 expression = new UniqueExpression(statement.asExpressionStmt().getExpression(),bb);
@@ -118,10 +121,12 @@ public class DDG {
             }
          }
 
-        // extract the variables out of each expression
-        // ListIterator is used, since subexpressions need to be live added to the queue 
+        // for each expression containing variables
+        // depending on the type of expression, do the following three steps
+        // 1. extract any variables that are being defined  e.g. int i = 4
+        // 2. extract any variables that are being used  e.g. add(i)
+        // 3. if expression contains sub expressions, add them to the end of the queue
         for (int i = 0; i < expressions.size(); i++) {
-        // for (ListIterator<UniqueExpression> iter = expressions.listIterator(); iter.hasNext();) {
             
             UniqueExpression uexpression = expressions.get(i);
             Expression expression = uexpression.expression;
@@ -196,22 +201,13 @@ public class DDG {
 
         reversed_cfg = new EdgeReversedGraph<BasicBlock, DefaultEdge>(cfg.node_graph);
 
-        // Export.exporter(reversed_cfg, counter);
-
+        // for each expression, link up variables to the last time they were used in the DDG
         for (int j = 0; j < expressions.size(); j++) {
-            // count++;
-            // System.out.println(count);
-
             link_statement(Expression_to_BasicBlock.get(expressions.get(j)));
         }
-
-        // if (expressions.size() >= 10) {
-        // Export.exporter(this, counter);
-        // }
     }
 
-    // A small function that adds an expression thats been extracted from another expression to the iterable
-    // This way the core variables are extracted
+    // Adds any found sub expressions to the queue
     public void add_to_queue(UniqueExpression parent_expression, Expression sub_expression) {
         UniqueExpression unique_expression = new UniqueExpression(sub_expression, parent_expression.bb);
         expressions.add(unique_expression);
@@ -222,7 +218,7 @@ public class DDG {
         }
     }
 
-    // Additional variable 'is_defined' remembers whether the expression is being used or defined. Useful for ','nameExpr' and similar
+    // Additional variable 'is_defined' remembers whether the expression is being used or defined. Useful for expressions like 'nameExpr' that could be either
     public void add_to_queue(UniqueExpression parent_expression, Expression sub_expression, boolean is_defined) {
         UniqueExpression unique_expression = new UniqueExpression(sub_expression, parent_expression.bb);
         expressions.add(unique_expression);
@@ -237,6 +233,7 @@ public class DDG {
         }
     }
 
+    // Add expressions extracted from statements to the queue
     public void expression_importer(UniqueExpression expression,UniqueStatement unique_statement,String attribute) {
         BasicBlock bb = Statement_to_BasicBlock.get(unique_statement);
         expressions.add(expression);
@@ -283,7 +280,7 @@ public class DDG {
         }
     }
 
-
+    // finds the last time a given variable was used in the program
     private void find_previous_vars(GraphPath<BasicBlock, DefaultEdge> path, BasicBlock post_bb, String variable, boolean defined_variable) {
 
         // get all the basic blocks in a cfg path, and iterate through them
@@ -316,7 +313,8 @@ public class DDG {
     }
 }
 
-// A small class to make every expression unique (i.e. differentiate expressions with the same hashcode) for use in LinkedHashMaps
+// A small class to make every expression unique.
+// Allows us to differentiate between identical expressions on different lines
 class UniqueExpression {
     Expression expression;
     String uid;
