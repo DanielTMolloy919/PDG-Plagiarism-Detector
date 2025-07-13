@@ -1,3 +1,22 @@
+# Maven build artifacts
+target/
+dependency-reduced-pom.xml
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Test/output files
+file2.txt
+output.dot
+*.dot
+
+# Original project-specific ignores
 ReversePolishNotation.java
 PDG Generator Logic.drawio
 test_files/**
